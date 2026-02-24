@@ -1,0 +1,1649 @@
+< <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Floor Plan to DXF Converter</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: 'Poppins', sans-serif;
+                overflow-x: hidden;
+                background-color: #121212;
+                color: #ffffff;
+                height: 100vh;
+                scroll-behavior: smooth;
+            }
+
+            #canvas-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: -1;
+            }
+
+            .main-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                perspective: 1000px;
+                padding: 2rem 0;
+            }
+
+            .card {
+                background: rgba(35, 35, 45, 0.8);
+                backdrop-filter: blur(10px);
+                border-radius: 24px;
+                padding: 3rem;
+                width: 90%;
+                max-width: 650px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                /* Removed transform-style and transform properties */
+                transition: box-shadow 0.5s ease;
+                /* Changed transition to only affect box-shadow */
+            }
+
+            .card:hover {
+                box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6);
+                /* Changed hover effect to just increase shadow */
+            }
+
+            h1 {
+                font-weight: 600;
+                margin-bottom: 2rem;
+                color: #5ee6d0;
+                font-size: 2.5rem;
+                text-shadow: 0 0 15px rgba(94, 230, 208, 0.5);
+            }
+
+            .subtitle {
+                color: #aaa;
+                margin-bottom: 2rem;
+            }
+
+            .tabs {
+                display: flex;
+                margin-bottom: 2rem;
+                border-bottom: 1px solid rgba(94, 230, 208, 0.3);
+            }
+
+            .tab {
+                padding: 0.75rem 1.5rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                border-bottom: 2px solid transparent;
+                font-weight: 500;
+            }
+
+            .tab.active {
+                color: #5ee6d0;
+                border-bottom: 2px solid #5ee6d0;
+            }
+
+            .tab-content {
+                display: none;
+            }
+
+            .tab-content.active {
+                display: block;
+            }
+
+            .file-upload {
+                position: relative;
+                margin-bottom: 2rem;
+                transition: all 0.3s ease;
+            }
+
+            .file-upload-label {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                border: 2px dashed #5ee6d0;
+                border-radius: 16px;
+                padding: 2rem 1rem;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                background: rgba(94, 230, 208, 0.1);
+            }
+
+            .file-upload-label:hover {
+                border-color: #ffffff;
+                background: rgba(94, 230, 208, 0.15);
+                transform: scale(1.02);
+            }
+
+            .file-upload-label svg {
+                width: 50px;
+                height: 50px;
+                margin-bottom: 1rem;
+                color: #5ee6d0;
+            }
+
+            .file-upload-label p {
+                color: #ffffff;
+            }
+
+            .file-upload input[type="file"] {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0;
+                cursor: pointer;
+            }
+
+            .btn {
+                background: linear-gradient(135deg, #5ee6d0, #36a18b);
+                color: #121212;
+                border: none;
+                padding: 1rem 2rem;
+                font-size: 1.1rem;
+                font-weight: 600;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 10px 20px rgba(94, 230, 208, 0.3);
+                width: 100%;
+                max-width: 250px;
+            }
+
+            .btn:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 25px rgba(94, 230, 208, 0.4);
+            }
+
+            .file-name {
+                margin-top: 1rem;
+                color: #5ee6d0;
+                font-size: 0.9rem;
+                display: none;
+            }
+
+            @keyframes float {
+                0% {
+                    transform: translateY(0px) rotate(0deg);
+                }
+
+                50% {
+                    transform: translateY(-20px) rotate(5deg);
+                }
+
+                100% {
+                    transform: translateY(0px) rotate(0deg);
+                }
+            }
+
+            .floating-blueprint {
+                position: absolute;
+                width: 200px;
+                height: 150px;
+                background: rgba(94, 230, 208, 0.1);
+                border: 1px solid rgba(94, 230, 208, 0.3);
+                border-radius: 8px;
+                pointer-events: none;
+            }
+
+            .floating-blueprint:nth-child(1) {
+                top: 15%;
+                left: 10%;
+                animation: float 8s infinite ease-in-out;
+            }
+
+            .floating-blueprint:nth-child(2) {
+                bottom: 20%;
+                right: 15%;
+                animation: float 10s infinite ease-in-out 1s;
+            }
+
+            .floating-blueprint:nth-child(3) {
+                top: 60%;
+                left: 15%;
+                animation: float 9s infinite ease-in-out 2s;
+            }
+
+            .room-form {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+                margin-bottom: 2rem;
+            }
+
+            .form-group {
+                margin-bottom: 1rem;
+            }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 0.5rem;
+                color: #5ee6d0;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 0.75rem;
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(94, 230, 208, 0.3);
+                border-radius: 8px;
+                color: white;
+                transition: all 0.3s ease;
+            }
+
+            .form-group input:focus {
+                outline: none;
+                border-color: #5ee6d0;
+                background: rgba(255, 255, 255, 0.15);
+            }
+
+            .add-room-btn {
+                grid-column: span 2;
+                background: none;
+                border: 1px dashed #5ee6d0;
+                color: #5ee6d0;
+                padding: 0.75rem;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                margin-top: 0.5rem;
+            }
+
+            .add-room-btn:hover {
+                background: rgba(94, 230, 208, 0.1);
+            }
+
+            .result-container {
+                display: none;
+                flex-direction: column;
+                align-items: center;
+                margin-top: 2rem;
+                padding: 1.5rem;
+                border: 1px solid rgba(94, 230, 208, 0.3);
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .result-image {
+                max-width: 100%;
+                border-radius: 8px;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            }
+
+            .loading-spinner {
+                display: none;
+                width: 50px;
+                height: 50px;
+                border: 5px solid rgba(94, 230, 208, 0.3);
+                border-radius: 50%;
+                border-top-color: #5ee6d0;
+                animation: spin 1s linear infinite;
+                margin: 2rem auto;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .room-item {
+                position: relative;
+                grid-column: span 2;
+                background: rgba(255, 255, 255, 0.05);
+                border-radius: 8px;
+                padding: 1rem;
+                margin-bottom: 0.5rem;
+                border: 1px solid rgba(94, 230, 208, 0.2);
+            }
+
+            .room-item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.75rem;
+            }
+
+            .room-item-title {
+                font-weight: 500;
+                color: #5ee6d0;
+            }
+
+            .remove-room {
+                background: none;
+                border: none;
+                color: #ff7f7f;
+                cursor: pointer;
+                font-size: 1.1rem;
+            }
+
+            .room-item-form {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+
+            .alert {
+                padding: 1rem;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .alert-error {
+                background: rgba(255, 127, 127, 0.2);
+                border: 1px solid rgba(255, 127, 127, 0.5);
+                color: #ff7f7f;
+            }
+
+            .alert-success {
+                background: rgba(94, 230, 208, 0.2);
+                border: 1px solid rgba(94, 230, 208, 0.5);
+                color: #5ee6d0;
+            }
+
+            .room-select {
+                width: 100%;
+                padding: 0.75rem;
+                background: rgba(255, 255, 255, 0.1);
+                border: 1px solid rgba(94, 230, 208, 0.3);
+                border-radius: 8px;
+                color: white;
+                transition: all 0.3s ease;
+            }
+
+            .room-select option {
+                background: #23232d;
+                color: white;
+            }
+
+            @media (max-width: 768px) {
+
+                /* .card {
+                padding: 2rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .floating-blueprint {
+                display: none;
+            }
+            
+            .room-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .add-room-btn {
+                grid-column: span 1;
+            }
+            
+            .room-item-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .room-item {
+                grid-column: span 1;
+            } */
+                .side-panel {
+                    height: 300px;
+                    width: 250px;
+                }
+
+                .left-panel {
+                    transform: translate(-220px, -50%);
+                }
+
+                .right-panel {
+                    transform: translate(220px, -50%);
+                }
+            }
+
+            .social-icons {
+                position: fixed;
+                bottom: 20px;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 50;
+            }
+
+            .social-icon {
+                background: rgba(35, 35, 45, 0.8);
+                border-radius: 50%;
+                padding: 12px;
+                margin: 0 15px;
+                width: 50px;
+                height: 50px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border: 1px solid rgba(94, 230, 208, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            .social-icon:hover {
+                transform: translateY(-5px);
+                background: rgba(94, 230, 208, 0.2);
+            }
+
+            .social-icon i {
+                font-size: 24px;
+                color: #5ee6d0;
+            }
+
+            .side-panel {
+                /* position: fixed;
+            height: 100vh;
+            width: 300px;
+            background: rgba(35, 35, 45, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(94, 230, 208, 0.2);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+            top: 0;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3); */
+                position: fixed;
+                height: 400px;
+                /* Fixed height instead of 100vh */
+                width: 300px;
+                background: rgba(35, 35, 45, 0.9);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(94, 230, 208, 0.2);
+                transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                z-index: 100;
+                top: 50%;
+                transform: translateY(-50%);
+                /* Center vertically */
+                overflow: hidden;
+                box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+                border-radius: 8px;
+                /* Smooth square shape */
+            }
+
+            .left-panel {
+                /* left: 0;
+            transform: translateX(-270px);
+            border-radius: 0 16px 16px 0; */
+                left: 0;
+                transform: translate(-270px, -50%);
+                border-radius: 0 8px 8px 0;
+            }
+
+            .right-panel {
+                /* right: 0;
+            transform: translateX(270px);
+            border-radius: 16px 0 0 16px; */
+                right: 0;
+                transform: translate(270px, -50%);
+                border-radius: 8px 0 0 8px;
+            }
+
+            .panel-content {
+                padding: 2rem;
+                color: #ffffff;
+                height: 100%;
+                overflow-y: auto;
+            }
+
+            .panel-content h2 {
+                color: #5ee6d0;
+                margin-bottom: 1.5rem;
+                border-bottom: 1px solid rgba(94, 230, 208, 0.3);
+                padding-bottom: 0.5rem;
+            }
+
+            .panel-content ul,
+            .panel-content ol {
+                padding-left: 1.5rem;
+            }
+
+            .panel-content li {
+                margin-bottom: 1rem;
+                line-height: 1.5;
+            }
+
+            .panel-tab {
+                /* position: absolute;
+            top: 50%;
+            width: 30px;
+            height: 120px;
+            background: #5ee6d0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); */
+                position: absolute;
+                top: 50%;
+                width: 30px;
+                height: 100px;
+                /* Smaller tab */
+                background: #5ee6d0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                transform: translateY(-50%);
+            }
+
+            .left-panel .panel-tab {
+                right: 0;
+                border-radius: 0 8px 8px 0;
+                transform: translateY(-50%);
+            }
+
+            .right-panel .panel-tab {
+                left: 0;
+                border-radius: 8px 0 0 8px;
+                transform: translateY(-50%);
+            }
+
+            .panel-tab span {
+                writing-mode: vertical-rl;
+                transform: rotate(180deg);
+                color: #121212;
+                font-weight: 600;
+                font-size: 0.9rem;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }
+
+            .left-panel:hover {
+                /* transform: translateX(0); */
+                transform: translate(0, -50%);
+            }
+
+            .right-panel:hover {
+                transform: translate(0, -50%);
+            }
+
+
+            a,
+            button,
+            .panel-tab,
+            .social-icon,
+            .social-icon i,
+            .file-upload-label {
+                text-decoration: none;
+                outline: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            a:focus,
+            button:focus,
+            .panel-tab:focus,
+            .social-icon:focus,
+            .file-upload-label:focus {
+                outline: none;
+                border: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="canvas-container"></div>
+
+        <div class="floating-blueprint"></div>
+        <div class="floating-blueprint"></div>
+        <div class="floating-blueprint"></div>
+
+        <div class="main-container">
+            <div class="card">
+                <h1>AutoPlan AI</h1>
+                <p class="subtitle">Convert your architectural floor plans into editable CAD files</p>
+
+                <div class="tabs">
+                    <div class="tab" data-tab="generate">Generate Plan</div>
+                    <div class="tab active" data-tab="upload">Upload Plan</div>
+                </div>
+
+                <div id="alert-container"></div>
+
+                <div class="tab-content active" id="upload-tab">
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label class="file-upload-label">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <p>Drag & drop your floor plan or click to browse</p>
+                                <span class="file-name" id="file-name"></span>
+                            </label>
+                            <input type="file" name="image" accept="image/*" id="file-input" required>
+                        </div>
+
+                        <button type="submit" class="btn">Upload & Convert</button>
+                    </form>
+                </div>
+
+                <div class="tab-content" id="generate-tab">
+                    <div id="rooms-container">
+                        <!-- Room items will be added here -->
+                    </div>
+
+                    <button id="add-room-btn" class="add-room-btn">
+                        <i class="fas fa-plus"></i> Add Room
+                    </button>
+
+                    <div style="width: 10px;"></div>
+
+                    <button id="generate-btn" class="btn" style="margin-top: 1.5rem;">Generate Plan</button>
+                </div>
+
+                <div class="loading-spinner" id="loading-spinner"></div>
+
+                <div class="result-container" id="result-container">
+                    <img id="result-image" class="result-image">
+                    <a id="download-btn" class="btn">Download DXF</a>
+                </div>
+
+                <div style="margin-top: 2.5rem;">
+                    <h2 style="font-size: 1.4rem; margin-bottom: 0.5rem; color: #5ee6d0;">🧠 Construction Intelligence
+                        Panel</h2>
+                    <p class="subtitle" style="margin-bottom: 1.5rem;">Simulate live construction data on top of your
+                        generated plan.</p>
+
+                    <div class="room-form" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label>Soil Type</label>
+                            <select id="soil-type" class="room-select">
+                                <option value="rock">Rock</option>
+                                <option value="gravel">Gravel</option>
+                                <option value="sand" selected>Sand</option>
+                                <option value="clay">Clay</option>
+                                <option value="fill">Fill / Mixed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Seismic Zone</label>
+                            <select id="seismic-zone" class="room-select">
+                                <option value="II">Zone II (Low)</option>
+                                <option value="III" selected>Zone III (Moderate)</option>
+                                <option value="IV">Zone IV (High)</option>
+                                <option value="V">Zone V (Very High)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Floors</label>
+                            <input type="number" id="floors" min="1" value="3">
+                        </div>
+                        <div class="form-group">
+                            <label>Cost per sq ft</label>
+                            <input type="number" id="cost-per-sqft" min="500" value="1800">
+                        </div>
+                    </div>
+
+                    <h3
+                        style="font-size: 1.1rem; margin-bottom: 0.8rem; color: #aaa; border-bottom: 1px dashed rgba(255, 255, 255, 0.2); padding-bottom: 0.5rem;">
+                        Optional Live Data Overrides</h3>
+                    <div class="room-form" style="margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label>Beam Stress (MPa)</label>
+                            <input type="number" placeholder="leave blank for auto" id="manual-beam-stress" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label>Bearing Capacity (kN/m²)</label>
+                            <input type="number" placeholder="leave blank for auto" id="manual-bearing-capacity"
+                                step="any">
+                        </div>
+                        <div class="form-group">
+                            <label>Settlement (mm)</label>
+                            <input type="number" placeholder="leave blank for auto" id="manual-settlement" step="any">
+                        </div>
+                    </div>
+
+                    <button id="simulate-btn" class="btn" style="margin-bottom: 1.5rem;">Simulate Live Site
+                        Data</button>
+
+                    <div id="intel-loading" class="loading-spinner" style="margin-top: 1rem; display: none;"></div>
+
+                    <div id="intel-results" class="result-container" style="display: none; margin-top: 1.5rem;">
+                        <div style="width: 100%; margin-bottom: 1rem;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="font-weight: 500;">Risk Score</span>
+                                <span id="risk-score-label" style="font-weight: 600; color: #5ee6d0;">0</span>
+                            </div>
+                            <div
+                                style="width: 100%; height: 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden;">
+                                <div id="risk-meter-bar"
+                                    style="height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, #16a34a, #eab308, #dc2626); transition: width 0.4s ease;">
+                                </div>
+                            </div>
+                            <p style="font-size: 0.75rem; color: #888; margin-top: 0.5rem; font-style: italic;">*Risk
+                                score computed using trained Random Forest model on synthetic engineering scenarios.</p>
+                            <p style="font-size: 0.7rem; color: #5ee6d0; margin-top: 0.2rem; font-weight: 500;">Model
+                                Confidence: <span id="model-confidence-label">N/A</span></p>
+                        </div>
+
+                        <div style="width: 100%; margin-bottom: 1.5rem;">
+                            <span
+                                style="font-size: 0.85rem; font-weight: 500; color: #aaa; margin-bottom: 0.5rem; display: block;">Risk
+                                Severity Breakdown</span>
+
+                            <div style="display: flex; align-items: center; margin-bottom: 0.4rem;">
+                                <span style="width: 35%; font-size: 0.8rem; color: #ddd;">Structural</span>
+                                <div
+                                    style="width: 65%; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden;">
+                                    <div id="bar-structural"
+                                        style="height: 100%; width: 0%; border-radius: 999px; background: #5ee6d0; transition: width 0.5s ease;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; margin-bottom: 0.4rem;">
+                                <span style="width: 35%; font-size: 0.8rem; color: #ddd;">Geotechnical</span>
+                                <div
+                                    style="width: 65%; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden;">
+                                    <div id="bar-geotechnical"
+                                        style="height: 100%; width: 0%; border-radius: 999px; background: #eab308; transition: width 0.5s ease;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; margin-bottom: 0.4rem;">
+                                <span style="width: 35%; font-size: 0.8rem; color: #ddd;">Schedule</span>
+                                <div
+                                    style="width: 65%; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden;">
+                                    <div id="bar-schedule"
+                                        style="height: 100%; width: 0%; border-radius: 999px; background: #f97316; transition: width 0.5s ease;">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center;">
+                                <span style="width: 35%; font-size: 0.8rem; color: #ddd;">Environmental</span>
+                                <div
+                                    style="width: 65%; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden;">
+                                    <div id="bar-environmental"
+                                        style="height: 100%; width: 0%; border-radius: 999px; background: #3b82f6; transition: width 0.5s ease;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1rem;">
+                            <span>Risk Level</span>
+                            <span id="risk-level-badge"
+                                style="padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.85rem; background: rgba(94, 230, 208, 0.15); border: 1px solid rgba(94, 230, 208, 0.5); color: #5ee6d0;">N/A</span>
+                        </div>
+
+                        <div id="risk-explanation-container"
+                            style="display: none; width: 100%; margin-bottom: 1rem; padding: 0.75rem; background: rgba(234, 179, 8, 0.1); border-radius: 8px; border-left: 3px solid #eab308;">
+                            <span style="font-size: 0.85rem; font-weight: 600; color: #fde68a;">⚠️ Why <span
+                                    id="explanation-risk-level">At-Risk</span>?</span><br />
+                            <span id="risk-explanation-text"
+                                style="font-size: 0.9rem; color: #ddd; display: block; margin-top: 0.25rem;">N/A</span>
+                        </div>
+
+                        <div
+                            style="width: 100%; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border-radius: 8px; border-left: 3px solid #5ee6d0;">
+                            <span style="font-size: 0.85rem; color: #aaa;">Main Driver of Risk</span><br />
+                            <span id="main-driver-label"
+                                style="font-weight: 500; font-size: 1rem; color: #fff;">N/A</span>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 0.5rem;">
+                            <span>Cost Impact</span>
+                            <span id="cost-impact-label" style="font-weight: 500;">+0.0%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; width: 100%; margin-bottom: 1.5rem;">
+                            <span>Schedule Impact</span>
+                            <span id="schedule-impact-label" style="font-weight: 500;">0 days</span>
+                        </div>
+
+                        <!-- Phase 7: Safety Margin Visualization -->
+                        <div style="width: 100%; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.4rem;">
+                                <span style="font-size: 0.85rem; color: #aaa;">Safety Margin Remaining</span>
+                                <span id="safety-margin-label"
+                                    style="font-size: 0.85rem; font-weight: 600; color: #16a34a;">--%</span>
+                            </div>
+                            <div
+                                style="width: 100%; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden;">
+                                <div id="safety-margin-bar"
+                                    style="height: 100%; width: 0%; border-radius: 999px; background: #16a34a; transition: width 0.5s ease;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phase 5: Risk Trend Simulation -->
+                        <div style="width: 100%; margin-bottom: 1.5rem;">
+                            <span style="font-size: 0.85rem; color: #aaa; margin-bottom: 0.4rem; display: block;">5-Step
+                                Trend Projection (Unmitigated)</span>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;"
+                                id="trend-projection-container">
+                                <!-- Bars injected by JS -->
+                            </div>
+                        </div>
+
+                        <!-- Phase 4: Scenario Comparison Mode -->
+                        <div
+                            style="width: 100%; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                            <span
+                                style="font-size: 0.85rem; font-weight: 500; margin-bottom: 0.5rem; display: block; color: #ddd;">Scenario
+                                Comparison (Top Mitigation)</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="text-align: left;">
+                                    <span style="font-size: 0.7rem; color: #888; display: block;">Current Risk</span>
+                                    <span id="scenario-current-risk"
+                                        style="font-size: 1.2rem; font-weight: 600; color: #dc2626;">0</span>
+                                </div>
+                                <div>
+                                    <i class="fas fa-arrow-right" style="color: #666; font-size: 0.9rem;"></i>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span style="font-size: 0.7rem; color: #888; display: block;">Simulated
+                                        Target</span>
+                                    <span id="scenario-target-risk"
+                                        style="font-size: 1.2rem; font-weight: 600; color: #16a34a;">0</span>
+                                </div>
+                            </div>
+                            <div
+                                style="margin-top: 0.5rem; text-align: center; font-size: 0.8rem; color: #16a34a; font-weight: 500;">
+                                <i class="fas fa-arrow-down" style="margin-right: 0.2rem;"></i> <span
+                                    id="scenario-reduction-label">0</span> pt reduction
+                            </div>
+                        </div>
+
+                        <div style="width: 100%; text-align: left; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: #5ee6d0;">Prioritized Mitigations
+                            </h3>
+                            <ul id="mitigation-list" style="padding-left: 1.2rem; font-size: 0.9rem; color: #ddd;"></ul>
+                        </div>
+
+                        <!-- Phase 6: Executive Summary Generator -->
+                        <div style="width: 100%; margin-top: 0.5rem;">
+                            <details
+                                style="cursor: pointer; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 0.5rem;">
+                                <summary style="font-size: 0.85rem; font-weight: 600; color: #5ee6d0; outline: none;">
+                                    Read Executive Summary</summary>
+                                <p id="executive-summary-text"
+                                    style="font-size: 0.85rem; color: #ccc; margin-top: 0.5rem; line-height: 1.4; padding-left: 0.5rem; border-left: 2px solid #5ee6d0;">
+                                    Generating report...</p>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-panel left-panel">
+            <div class="panel-content">
+                <h2>Features</h2>
+                <ul>
+                    <li>Convert floor plans to DXF</li>
+                    <!-- <li></li> -->
+                    <li>Multiple file formats supported</li>
+                    <li>Quick processing time</li>
+                    <li>High precision output</li>
+                    <li>Easy and Intuitive to use</li>
+                </ul>
+            </div>
+            <div class="panel-tab">
+                <span>Features</span>
+            </div>
+        </div>
+
+        <div class="side-panel right-panel">
+            <div class="panel-content">
+                <h2>Working</h2>
+                <ul>
+                    <!-- <li>Upload your floor plan image or specify room requirements</li> -->
+                    <!-- <li></li> -->
+                    <li>Upload your image file</li>
+                    <li>Or let us create a floor plan for you</li>
+                    <li>Get your CAD file within seconds</li>
+                    <li>Edit in your favorite CAD software</li>
+                </ul>
+            </div>
+
+            <div class="panel-tab">
+                <span>Working</span>
+            </div>
+        </div>
+
+
+
+
+        <div class="social-icons">
+            <a href="#" class="social-icon github-icon" aria-label="Repository">
+                <i class="fab fa-github"></i>
+            </a>
+            <a href="https://linkedin.com/in/yourusername" class="social-icon linkedin-icon">
+                <i class="fab fa-linkedin"></i>
+            </a>
+        </div>
+
+        <script>
+            // 3D background with Three.js
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Add grid lines to represent blueprints
+            const gridHelper = new THREE.GridHelper(100, 50, 0x5ee6d0, 0x36a18b);
+            scene.add(gridHelper);
+
+            // Add some floating particles
+            const particles = new THREE.Group();
+            scene.add(particles);
+
+            for (let i = 0; i < 100; i++) {
+                const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const material = new THREE.MeshBasicMaterial({
+                    color: 0x5ee6d0,
+                    transparent: true,
+                    opacity: Math.random() * 0.5 + 0.1
+                });
+                const particle = new THREE.Mesh(geometry, material);
+
+                particle.position.x = Math.random() * 40 - 20;
+                particle.position.y = Math.random() * 40 - 20;
+                particle.position.z = Math.random() * 40 - 20;
+
+                particle.userData = {
+                    vx: Math.random() * 0.02 - 0.01,
+                    vy: Math.random() * 0.02 - 0.01,
+                    vz: Math.random() * 0.02 - 0.01
+                };
+
+                particles.add(particle);
+            }
+
+            // Position camera
+            camera.position.z = 30;
+            camera.position.y = 15;
+            camera.lookAt(0, 0, 0);
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Rotate grid slowly
+                gridHelper.rotation.y += 0.001;
+
+                // Animate particles
+                particles.children.forEach(particle => {
+                    particle.position.x += particle.userData.vx;
+                    particle.position.y += particle.userData.vy;
+                    particle.position.z += particle.userData.vz;
+
+                    // If particle goes too far, reset its position
+                    if (Math.abs(particle.position.x) > 30 ||
+                        Math.abs(particle.position.y) > 30 ||
+                        Math.abs(particle.position.z) > 30) {
+                        particle.position.x = Math.random() * 20 - 10;
+                        particle.position.y = Math.random() * 20 - 10;
+                        particle.position.z = Math.random() * 20 - 10;
+                    }
+                });
+
+                renderer.render(scene, camera);
+            }
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // REMOVED: Interactive card movement mousemove event listener
+
+            // Start animation
+            animate();
+
+            // Tab switching logic
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+
+                    // Hide all tab contents
+                    const tabContents = document.querySelectorAll('.tab-content');
+                    tabContents.forEach(content => content.classList.remove('active'));
+
+                    // Show the corresponding tab content
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+
+            // Show alert function
+            function showAlert(message, type) {
+                const alertContainer = document.getElementById('alert-container');
+                const alertElement = document.createElement('div');
+                alertElement.className = `alert alert-${type}`;
+                alertElement.textContent = message;
+
+                alertContainer.innerHTML = '';
+                alertContainer.appendChild(alertElement);
+
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    alertElement.remove();
+                }, 5000);
+            }
+
+            // Room types for dropdown
+            const roomTypes = [
+                'LivingRoom',
+                'Bedroom',
+                'Kitchen',
+                'Bath',
+                'DiningRoom',
+                'Office',
+                'Hallway',
+                'Garage',
+                'Closet',
+                'Utility'
+            ];
+
+            // Generate a room item HTML
+            function createRoomItem() {
+                const roomId = Date.now();
+                const roomItem = document.createElement('div');
+                roomItem.className = 'room-item';
+                roomItem.dataset.id = roomId;
+
+                let roomOptionsHTML = '';
+                roomTypes.forEach(type => {
+                    roomOptionsHTML += `<option value="${type}">${type}</option>`;
+                });
+
+                roomItem.innerHTML = `
+                <div class="room-item-header">
+                    <div class="room-item-title">Room Specification</div>
+                    <button type="button" class="remove-room">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="room-item-form">
+                    <div class="form-group">
+                        <label>Room Type</label>
+                        <select class="room-select" name="room-type">
+                            ${roomOptionsHTML}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Count</label>
+                        <input type="number" name="room-count" min="1" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Area (sq ft)</label>
+                        <input type="number" name="room-area" min="10" value="100">
+                    </div>
+                </div>
+            `;
+
+                // Add event listener for remove button
+                roomItem.querySelector('.remove-room').addEventListener('click', () => {
+                    roomItem.remove();
+                });
+
+                return roomItem;
+            }
+
+            // Add room button event listener
+            document.getElementById('add-room-btn').addEventListener('click', () => {
+                const roomsContainer = document.getElementById('rooms-container');
+                const roomItem = createRoomItem();
+                roomsContainer.appendChild(roomItem);
+
+                // Animate the new room item
+                gsap.from(roomItem, {
+                    y: 20,
+                    opacity: 0,
+                    duration: 0.3,
+                    ease: "power2.out"
+                });
+            });
+
+            // Add an initial room by default
+            document.getElementById('add-room-btn').click();
+
+            // Generate plan button event listener
+            document.getElementById('generate-btn').addEventListener('click', async () => {
+                // Collect all room specifications
+                const roomItems = document.querySelectorAll('.room-item');
+
+                if (roomItems.length === 0) {
+                    showAlert('Please add at least one room specification', 'error');
+                    return;
+                }
+
+                const counts = {};
+                const areas = {};
+
+                roomItems.forEach(item => {
+                    const roomType = item.querySelector('[name="room-type"]').value;
+                    const roomCount = parseInt(item.querySelector('[name="room-count"]').value);
+                    const roomArea = parseFloat(item.querySelector('[name="room-area"]').value) * 1000; // Convert to sq ft and scale up
+
+                    // Accumulate counts and areas for each room type
+                    if (counts[roomType]) {
+                        counts[roomType] += roomCount;
+                    } else {
+                        counts[roomType] = roomCount;
+                    }
+
+                    if (areas[roomType]) {
+                        areas[roomType] += roomArea * roomCount;
+                    } else {
+                        areas[roomType] = roomArea * roomCount;
+                    }
+                });
+
+                // Prepare data payload
+                const payload = {
+                    counts: counts,
+                    areas: areas
+                };
+
+                // Show loading spinner
+                document.getElementById('loading-spinner').style.display = 'block';
+                document.getElementById('result-container').style.display = 'none';
+
+                try {
+                    const response = await fetch('/find_plan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await response.json();
+
+                    if (response.status === 200 && data.success) {
+                        // Display result
+                        document.getElementById('result-image').src = data.image_preview;
+                        document.getElementById('download-btn').href = data.dxf_path;
+                        document.getElementById('result-container').style.display = 'flex';
+                        showAlert('Floor plan generated successfully!', 'success');
+                    } else {
+                        showAlert(data.error || 'Failed to generate floor plan', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while generating the floor plan', 'error');
+                } finally {
+                    // loading spinner handling (continuing from where the code was cut off)
+                    document.getElementById('loading-spinner').style.display = 'none';
+                }
+            });
+
+            // File upload handling
+            const fileInput = document.getElementById('file-input');
+            const fileNameDisplay = document.getElementById('file-name');
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    fileNameDisplay.textContent = e.target.files[0].name;
+                    fileNameDisplay.style.display = 'block';
+
+                    // Animate the file name
+                    gsap.from(fileNameDisplay, {
+                        y: -10,
+                        opacity: 0,
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                }
+            });
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Highlight drop area when item is dragged over it
+            const fileUploadLabel = document.querySelector('.file-upload-label');
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileUploadLabel.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileUploadLabel.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                fileUploadLabel.classList.add('highlighted');
+                fileUploadLabel.style.borderColor = '#ffffff';
+                fileUploadLabel.style.background = 'rgba(94, 230, 208, 0.2)';
+            }
+
+            function unhighlight() {
+                fileUploadLabel.classList.remove('highlighted');
+                fileUploadLabel.style.borderColor = '#5ee6d0';
+                fileUploadLabel.style.background = 'rgba(94, 230, 208, 0.1)';
+            }
+
+            // Handle dropped files
+            fileUploadLabel.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileNameDisplay.textContent = files[0].name;
+                    fileNameDisplay.style.display = 'block';
+
+                    // Animate the file name
+                    gsap.from(fileNameDisplay, {
+                        y: -10,
+                        opacity: 0,
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                }
+            }
+
+            // Handle form submission for file upload
+            document.getElementById('upload-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const fileInput = document.getElementById('file-input');
+
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    showAlert('Please select a file to upload', 'error');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+
+                // Show loading spinner
+                document.getElementById('loading-spinner').style.display = 'block';
+                document.getElementById('result-container').style.display = 'none';
+
+                try {
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (response.status === 200 && data.success) {
+                        // Display result
+                        document.getElementById('result-image').src = data.image_preview;
+                        document.getElementById('download-btn').href = data.dxf_path;
+                        document.getElementById('result-container').style.display = 'flex';
+                        showAlert('Floor plan processed successfully!', 'success');
+                    } else {
+                        showAlert(data.error || 'Failed to process floor plan', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while processing the floor plan', 'error');
+                } finally {
+                    document.getElementById('loading-spinner').style.display = 'none';
+                }
+            });
+
+            // Simulate live construction data and call /analyze_construction
+            document.getElementById('simulate-btn').addEventListener('click', async () => {
+                const soilType = document.getElementById('soil-type').value;
+                const seismicZone = document.getElementById('seismic-zone').value;
+                const floors = parseInt(document.getElementById('floors').value || '1', 10);
+                const costPerSqft = parseFloat(document.getElementById('cost-per-sqft').value || '0');
+
+                const beamStressInput = document.getElementById('manual-beam-stress').value;
+                const bearingCapacityInput = document.getElementById('manual-bearing-capacity').value;
+                const settlementInput = document.getElementById('manual-settlement').value;
+
+                // Generate a simple random but realistic live data snapshot or use manual inputs.
+                const liveData = {
+                    beam_stress: beamStressInput !== "" ? parseFloat(beamStressInput) : (220 + Math.random() * 120),
+                    bearing_capacity: bearingCapacityInput !== "" ? parseFloat(bearingCapacityInput) : (120 + Math.random() * 120),
+                    settlement: settlementInput !== "" ? parseFloat(settlementInput) : (5 + Math.random() * 15),
+                    rainfall: Math.random() * 180,                   // mm per period
+                    planned_progress: 60 + Math.random() * 30,       // %
+                    actual_progress: 40 + Math.random() * 35,        // %
+                    concrete_strength: 20 + Math.random() * 10       // MPa
+                };
+
+                document.getElementById('intel-loading').style.display = 'block';
+                document.getElementById('intel-results').style.display = 'none';
+
+                try {
+                    const response = await fetch('/analyze_construction', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            soil_type: soilType,
+                            seismic_zone: seismicZone,
+                            floors: floors,
+                            cost_per_sqft: costPerSqft,
+                            live_data: liveData
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data || data.error) {
+                        showAlert(data.error || 'Failed to analyze construction risk', 'error');
+                        return;
+                    }
+
+                    const riskScore = data.risk_score ?? 0;
+                    const riskLevel = data.risk_level || 'N/A';
+
+                    // Update risk meter
+                    const meterBar = document.getElementById('risk-meter-bar');
+                    meterBar.style.width = `${Math.max(0, Math.min(100, riskScore))}%`;
+                    document.getElementById('risk-score-label').textContent = riskScore.toString();
+
+                    const badge = document.getElementById('risk-level-badge');
+                    const explanationContainer = document.getElementById('risk-explanation-container');
+                    const explanationLevel = document.getElementById('explanation-risk-level');
+
+                    badge.textContent = riskLevel;
+                    explanationContainer.style.display = 'none';
+
+                    if (riskLevel === 'Stable') {
+                        badge.style.background = 'rgba(22, 163, 74, 0.15)';
+                        badge.style.borderColor = 'rgba(22, 163, 74, 0.7)';
+                        badge.style.color = '#4ade80';
+                    } else if (riskLevel === 'At-Risk') {
+                        badge.style.background = 'rgba(234, 179, 8, 0.15)';
+                        badge.style.borderColor = 'rgba(234, 179, 8, 0.7)';
+                        badge.style.color = '#fde68a';
+                        explanationContainer.style.display = 'block';
+                        explanationContainer.style.background = 'rgba(234, 179, 8, 0.1)';
+                        explanationContainer.style.borderLeftColor = '#eab308';
+                        explanationLevel.textContent = 'At-Risk';
+                        explanationLevel.style.color = '#fde68a';
+                    } else {
+                        badge.style.background = 'rgba(220, 38, 38, 0.15)';
+                        badge.style.borderColor = 'rgba(220, 38, 38, 0.7)';
+                        badge.style.color = '#fca5a5';
+                        explanationContainer.style.display = 'block';
+                        explanationContainer.style.background = 'rgba(220, 38, 38, 0.1)';
+                        explanationContainer.style.borderLeftColor = '#ef4444';
+                        explanationLevel.textContent = 'Critical';
+                        explanationLevel.style.color = '#fca5a5';
+                    }
+
+                    document.getElementById('risk-explanation-text').textContent = data.risk_explanation || 'No details available.';
+                    document.getElementById('main-driver-label').textContent = data.main_driver || 'N/A';
+
+                    document.getElementById('cost-impact-label').textContent = data.cost_impact || '+0.0%';
+                    document.getElementById('schedule-impact-label').textContent =
+                        `${data.schedule_impact_days ?? 0} days`;
+
+                    // Update confidence and breakdown UI (Phases 1 & 2)
+                    document.getElementById('model-confidence-label').textContent = data.model_confidence || 'N/A';
+
+                    const breakdown = data.risk_breakdown || {};
+                    document.getElementById('bar-structural').style.width = `${(breakdown.structural || 0) * 100}%`;
+                    document.getElementById('bar-geotechnical').style.width = `${(breakdown.geotechnical || 0) * 100}%`;
+                    document.getElementById('bar-schedule').style.width = `${(breakdown.schedule || 0) * 100}%`;
+                    document.getElementById('bar-environmental').style.width = `${(breakdown.environmental || 0) * 100}%`;
+
+                    const mitigations = data.mitigations || [];
+                    const listEl = document.getElementById('mitigation-list');
+                    listEl.innerHTML = '';
+                    listEl.style.listStyle = 'none'; // Replace bullets with ranks
+                    listEl.style.paddingLeft = '0';
+
+                    mitigations.forEach((item) => {
+                        const li = document.createElement('li');
+                        li.style.marginBottom = "0.75rem";
+                        li.style.display = "flex";
+                        li.style.alignItems = "flex-start";
+
+                        const rankBadge = document.createElement('span');
+                        rankBadge.textContent = item.priority_rank ? item.priority_rank : "•";
+                        rankBadge.style.display = "inline-flex";
+                        rankBadge.style.alignItems = "center";
+                        rankBadge.style.justifyContent = "center";
+                        rankBadge.style.width = "1.5rem";
+                        rankBadge.style.height = "1.5rem";
+                        rankBadge.style.borderRadius = "50%";
+                        rankBadge.style.background = "rgba(94, 230, 208, 0.15)";
+                        rankBadge.style.color = "#5ee6d0";
+                        rankBadge.style.fontSize = "0.75rem";
+                        rankBadge.style.fontWeight = "600";
+                        rankBadge.style.marginRight = "0.75rem";
+                        rankBadge.style.flexShrink = "0";
+
+                        const textSpan = document.createElement('span');
+                        textSpan.textContent = typeof item === 'object' ? item.action : item; // Fallback string handling just in case
+                        textSpan.style.marginTop = "0.15rem";
+
+                        li.appendChild(rankBadge);
+                        li.appendChild(textSpan);
+                        listEl.appendChild(li);
+                    });
+
+                    // Generative UI Injection
+                    if (data.generative_design && data.generative_design.alternatives) {
+                        const tableBody = document.getElementById('generative-design-table-body');
+                        tableBody.innerHTML = '';
+
+                        // Extract metrics for header
+                        const baseRisk = data.generative_design.current_design.risk_score;
+                        const recRisk = data.generative_design.recommended_design.risk_score;
+                        const reduction = Math.max(0, baseRisk - recRisk).toFixed(1);
+
+                        document.getElementById('generative-summary-banner').style.display = 'block';
+                        document.getElementById('gen-risk-reduction').innerHTML = `${baseRisk} &rarr; ${recRisk} (-${reduction} points)`;
+
+                        // Add Current Baseline Row
+                        const baseRow = document.createElement('tr');
+                        baseRow.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                        baseRow.innerHTML = `
+                            <td style="padding: 0.5rem; color: #ccc;">Current</td>
+                            <td style="padding: 0.5rem; color: #dc2626;">${baseRisk}</td>
+                            <td style="padding: 0.5rem; color: #ccc;">+0.0%</td>
+                            <td style="padding: 0.5rem; color: #ccc;">0d</td>
+                            <td style="padding: 0.5rem; color: #888;">Baseline</td>
+                        `;
+                        tableBody.appendChild(baseRow);
+
+                        // Map Alternatives
+                        data.generative_design.alternatives.forEach(alt => {
+                            const isRecommended = alt.design_id === data.generative_design.recommended_design.design_id;
+                            const altRow = document.createElement('tr');
+                            altRow.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+
+                            // Highlight recommended
+                            if (isRecommended) {
+                                altRow.style.background = 'rgba(22, 163, 74, 0.15)';
+                            }
+
+                            const statusText = isRecommended ? "Recommended" : "Improved";
+                            const statusColor = isRecommended ? "#16a34a" : "#ca8a04";
+
+                            altRow.innerHTML = `
+                                <td style="padding: 0.5rem; color: #fff;">${alt.design_id}</td>
+                                <td style="padding: 0.5rem; color: #16a34a;">${alt.risk_score}</td>
+                                <td style="padding: 0.5rem; color: #eab308;">+${alt.cost_impact_pct}%</td>
+                                <td style="padding: 0.5rem; color: #eab308;">${alt.schedule_days}d</td>
+                                <td style="padding: 0.5rem; color: ${statusColor}; font-weight: 500;">${statusText}</td>
+                            `;
+                            tableBody.appendChild(altRow);
+                        });
+                    }
+
+                    // Phase 4: Scenario Comparison Mode
+                    document.getElementById('scenario-current-risk').textContent = riskScore.toString();
+                    document.getElementById('scenario-target-risk').textContent = data.post_mitigation_risk_score !== undefined ? data.post_mitigation_risk_score.toString() : riskScore.toString();
+                    document.getElementById('scenario-reduction-label').textContent = data.risk_reduction !== undefined ? data.risk_reduction.toString() : "0";
+
+                    // Phase 5: Risk Trend Simulation
+                    const trendContainer = document.getElementById('trend-projection-container');
+                    trendContainer.innerHTML = '';
+                    const projections = data.risk_projection || [riskScore];
+                    projections.forEach((proj, idx) => {
+                        const maxH = 36;
+                        const h = Math.max(4, Math.min(maxH, (proj / 100) * maxH)); // Give it a min height of 4px
+
+                        const col = document.createElement('div');
+                        col.style.display = 'flex';
+                        col.style.flexDirection = 'column';
+                        col.style.alignItems = 'center';
+                        col.style.width = '18%';
+
+                        const label = document.createElement('span');
+                        label.style.fontSize = '0.65rem';
+                        label.style.color = '#888';
+                        label.style.marginBottom = '2px';
+                        label.textContent = `T+${idx}`;
+
+                        const bar = document.createElement('div');
+                        bar.style.width = '100%';
+                        bar.style.height = `${h}px`;
+                        bar.style.background = '#dc2626';
+                        bar.style.borderTopLeftRadius = '2px';
+                        bar.style.borderTopRightRadius = '2px';
+
+                        col.appendChild(label);
+                        col.appendChild(bar);
+                        trendContainer.appendChild(col);
+                    });
+
+                    // Phase 6: Executive Summary
+                    document.getElementById('executive-summary-text').textContent = data.executive_summary || 'No executive summary available.';
+
+                    // Phase 7: Safety Margin
+                    const marginPct = data.safety_margin_pct !== undefined ? data.safety_margin_pct : 0;
+                    document.getElementById('safety-margin-label').textContent = `${marginPct}%`;
+                    document.getElementById('safety-margin-bar').style.width = `${Math.min(100, Math.max(0, marginPct))}%`;
+
+                    document.getElementById('intel-results').style.display = 'flex';
+                    showAlert('Construction risk analyzed successfully.', 'success');
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert('An error occurred while analyzing construction risk', 'error');
+                } finally {
+                    document.getElementById('intel-loading').style.display = 'none';
+                }
+            });
+
+            // Add hover animations for buttons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(button => {
+                button.addEventListener('mouseenter', () => {
+                    gsap.to(button, {
+                        y: -5,
+                        boxShadow: '0 15px 25px rgba(94, 230, 208, 0.4)',
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                });
+
+                button.addEventListener('mouseleave', () => {
+                    gsap.to(button, {
+                        y: 0,
+                        boxShadow: '0 10px 20px rgba(94, 230, 208, 0.3)',
+                        duration: 0.3,
+                        ease: "power2.out"
+                    });
+                });
+            });
+
+            // Add tooltip functionality
+            const createTooltip = (element, text) => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = text;
+                tooltip.style.position = 'absolute';
+                tooltip.style.background = 'rgba(35, 35, 45, 0.9)';
+                tooltip.style.color = '#5ee6d0';
+                tooltip.style.padding = '0.5rem 1rem';
+                tooltip.style.borderRadius = '8px';
+                tooltip.style.fontSize = '0.8rem';
+                tooltip.style.zIndex = '1000';
+                tooltip.style.opacity = '0';
+                tooltip.style.transition = 'opacity 0.3s ease';
+                tooltip.style.pointerEvents = 'none';
+                tooltip.style.boxShadow = '0 5px 10px rgba(0, 0, 0, 0.2)';
+                tooltip.style.border = '1px solid rgba(94, 230, 208, 0.3)';
+
+                document.body.appendChild(tooltip);
+
+                element.addEventListener('mouseenter', () => {
+                    const rect = element.getBoundingClientRect();
+                    tooltip.style.left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px';
+                    tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+                    tooltip.style.opacity = '1';
+                });
+
+                element.addEventListener('mouseleave', () => {
+                    tooltip.style.opacity = '0';
+                });
+            };
+
+            // Add tooltips to social icons
+            createTooltip(document.querySelector('.github-icon'), 'View on GitHub');
+            createTooltip(document.querySelector('.linkedin-icon'), 'Connect on LinkedIn');
+
+            // Initialize the app with animation
+            gsap.from('.card', {
+                y: 30,
+                opacity: 0,
+                duration: 0.8,
+                ease: "power3.out"
+            });
+
+            // Service worker registration for PWA functionality
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registration successful');
+                        })
+                        .catch(error => {
+                            console.log('ServiceWorker registration failed:', error);
+                        });
+                });
+            }
+        </script>
+    </body>
+
+    </html>

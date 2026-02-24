@@ -1,0 +1,194 @@
+{
+  "plan_metadata": {
+    "total_area": 0.0,
+    "room_counts": {}
+  },
+  "layout": {
+    "total_area": 0.0,
+    "total_rooms": 1.0,
+    "span_length": 0.9666666666666667,
+    "wall_density": 0.18,
+    "max_span": 1.1116666666666666
+  },
+  "baseline": {
+    "allowed_beam_stress": 250.0,
+    "expected_bearing_capacity": 217.3913043478261,
+    "settlement_limit": 23.5,
+    "safety_factor": 1.5,
+    "floors": 1.0,
+    "total_area": 0.0
+  },
+  "timeline": [
+    {
+      "step": 0,
+      "live": {
+        "beam_stress": 224.55866754824376,
+        "bearing_capacity": 215.35198000239703,
+        "settlement": 0.0,
+        "rainfall": 10.732856779932971,
+        "planned_progress": 16.666666666666668,
+        "actual_progress": 10.558617294060856,
+        "concrete_strength": 28.92078443430949
+      },
+      "live_features": {
+        "stress_ratio": 0.8982346701929751,
+        "bearing_ratio": 0.9906191080110263,
+        "settlement_ratio": 0.0,
+        "progress_gap": 0.3664829623563487,
+        "quality_index": 1.1568313773723795,
+        "delay_index": 0.5855006328009662,
+        "rainfall": 10.732856779932971
+      },
+      "risk_score": 28.5,
+      "risk_level": "Low",
+      "mitigations": [
+        "Add additional manpower or shifts on critical path activities.",
+        "Fast-track or resequence critical path tasks to recover schedule."
+      ],
+      "cost_impact": "+0.0%",
+      "schedule_impact_days": 0
+    },
+    {
+      "step": 1,
+      "live": {
+        "beam_stress": 188.61389262466562,
+        "bearing_capacity": 216.6971223789256,
+        "settlement": 3.5316109396276736,
+        "rainfall": 20.608104232613897,
+        "planned_progress": 33.333333333333336,
+        "actual_progress": 29.609297190091695,
+        "concrete_strength": 24.284374476436202
+      },
+      "live_features": {
+        "stress_ratio": 0.7544555704986625,
+        "bearing_ratio": 0.9968067629430577,
+        "settlement_ratio": 0.15028131657990101,
+        "progress_gap": 0.11172108429724921,
+        "quality_index": 0.9713749790574481,
+        "delay_index": 0.23627530722125348,
+        "rainfall": 20.608104232613897
+      },
+      "risk_score": 10.6,
+      "risk_level": "Low",
+      "mitigations": [
+        "Continue as planned with routine monitoring; no immediate mitigation required."
+      ],
+      "cost_impact": "+0.0%",
+      "schedule_impact_days": 0
+    },
+    {
+      "step": 2,
+      "live": {
+        "beam_stress": 233.77362462851295,
+        "bearing_capacity": 184.0192358559636,
+        "settlement": 3.9620855793832823,
+        "rainfall": 12.654058946723794,
+        "planned_progress": 50.0,
+        "actual_progress": 46.42456229908622,
+        "concrete_strength": 33.89124319181549
+      },
+      "live_features": {
+        "stress_ratio": 0.9350944985140518,
+        "bearing_ratio": 0.8464884849374325,
+        "settlement_ratio": 0.1685993863567354,
+        "progress_gap": 0.07150875401827562,
+        "quality_index": 1.2,
+        "delay_index": 0.14944332751649275,
+        "rainfall": 12.654058946723794
+      },
+      "risk_score": 15.0,
+      "risk_level": "Low",
+      "mitigations": [
+        "Increase foundation depth or width to reduce contact pressure.",
+        "Introduce soil stabilization (e.g., compaction, grouting, or replacement)."
+      ],
+      "cost_impact": "+0.0%",
+      "schedule_impact_days": 0
+    },
+    {
+      "step": 3,
+      "live": {
+        "beam_stress": 235.49178429123683,
+        "bearing_capacity": 224.3605744475469,
+        "settlement": 4.68095506373271,
+        "rainfall": 27.37426199892731,
+        "planned_progress": 66.66666666666667,
+        "actual_progress": 62.56062929585751,
+        "concrete_strength": 34.34525846718044
+      },
+      "live_features": {
+        "stress_ratio": 0.9419671371649473,
+        "bearing_ratio": 1.0320586424587157,
+        "settlement_ratio": 0.19918957718011532,
+        "progress_gap": 0.06159056056213742,
+        "quality_index": 1.2,
+        "delay_index": 0.1836333808396305,
+        "rainfall": 27.37426199892731
+      },
+      "risk_score": 11.7,
+      "risk_level": "Low",
+      "mitigations": [
+        "Continue as planned with routine monitoring; no immediate mitigation required."
+      ],
+      "cost_impact": "+0.0%",
+      "schedule_impact_days": 0
+    },
+    {
+      "step": 4,
+      "live": {
+        "beam_stress": 259.55806598416115,
+        "bearing_capacity": 192.65414496820136,
+        "settlement": 7.2652704866876245,
+        "rainfall": 11.94643017073057,
+        "planned_progress": 83.33333333333334,
+        "actual_progress": 81.75993042945532,
+        "concrete_strength": 21.311703274455663
+      },
+      "live_features": {
+        "stress_ratio": 1.0382322639366446,
+        "bearing_ratio": 0.8862090668537262,
+        "settlement_ratio": 0.3091604462420266,
+        "progress_gap": 0.01888083484653623,
+        "quality_index": 0.8524681309782265,
+        "delay_index": 0.06814268617223958,
+        "rainfall": 11.94643017073057
+      },
+      "risk_score": 19.3,
+      "risk_level": "Low",
+      "mitigations": [
+        "Increase beam depth or section size.",
+        "Add longitudinal and shear reinforcement in critical beams."
+      ],
+      "cost_impact": "+0.0%",
+      "schedule_impact_days": 0
+    },
+    {
+      "step": 5,
+      "live": {
+        "beam_stress": 210.7556728638816,
+        "bearing_capacity": 190.54485764109265,
+        "settlement": 11.362796178766116,
+        "rainfall": 11.161934200576646,
+        "planned_progress": 100.0,
+        "actual_progress": 93.07359861696985,
+        "concrete_strength": 20.323438004510404
+      },
+      "live_features": {
+        "stress_ratio": 0.8430226914555264,
+        "bearing_ratio": 0.8765063451490261,
+        "settlement_ratio": 0.48352324164962196,
+        "progress_gap": 0.06926401383030154,
+        "quality_index": 0.8129375201804162,
+        "delay_index": 0.14110246808070778,
+        "rainfall": 11.161934200576646
+      },
+      "risk_score": 9.3,
+      "risk_level": "Low",
+      "mitigations": [
+        "Continue as planned with routine monitoring; no immediate mitigation required."
+      ],
+      "cost_impact": "+0.0%",
+      "schedule_impact_days": 0
+    }
+  ]
+}
