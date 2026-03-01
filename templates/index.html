@@ -613,6 +613,40 @@
                 <h1>AutoPlan AI</h1>
                 <p class="subtitle">Convert your architectural floor plans into editable CAD files</p>
 
+                <!-- Risk Engine Dashboards Navigation -->
+                <div
+                    style="margin-bottom: 2rem; background: rgba(0,0,0,0.2); border: 1px solid rgba(94, 230, 208, 0.2); border-radius: 12px; padding: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; color: #5ee6d0; margin-bottom: 1rem;"><i class="fas fa-chart-line"
+                            style="margin-right: 8px;"></i> Risk Engine Dashboards</h3>
+                    <div
+                        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+                        <a href="/mitigation-dashboard"
+                            style="background: rgba(94, 230, 208, 0.15); color: #5ee6d0; border: 1px solid rgba(94, 230, 208, 0.5); border-radius: 8px; padding: 0.6rem; text-align: center; font-size: 0.85rem; font-weight: 600; display: block; text-decoration: none; transition: all 0.2s;"
+                            onmouseover="this.style.background='rgba(94, 230, 208, 0.3)'"
+                            onmouseout="this.style.background='rgba(94, 230, 208, 0.15)'">Overall Health</a>
+                        <a href="/structural-dashboard"
+                            style="background: rgba(255, 255, 255, 0.05); color: #ddd; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.6rem; text-align: center; font-size: 0.85rem; display: block; text-decoration: none; transition: all 0.2s;"
+                            onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">Structural</a>
+                        <a href="/geotechnical-dashboard"
+                            style="background: rgba(255, 255, 255, 0.05); color: #ddd; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.6rem; text-align: center; font-size: 0.85rem; display: block; text-decoration: none; transition: all 0.2s;"
+                            onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">Geotechnical</a>
+                        <a href="/schedule-dashboard"
+                            style="background: rgba(255, 255, 255, 0.05); color: #ddd; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.6rem; text-align: center; font-size: 0.85rem; display: block; text-decoration: none; transition: all 0.2s;"
+                            onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">Schedule</a>
+                        <a href="/quality-dashboard"
+                            style="background: rgba(255, 255, 255, 0.05); color: #ddd; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.6rem; text-align: center; font-size: 0.85rem; display: block; text-decoration: none; transition: all 0.2s;"
+                            onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">Quality</a>
+                        <a href="/cost-dashboard"
+                            style="background: rgba(255, 255, 255, 0.05); color: #ddd; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.6rem; text-align: center; font-size: 0.85rem; display: block; text-decoration: none; transition: all 0.2s;"
+                            onmouseover="this.style.background='rgba(255, 255, 255, 0.1)'"
+                            onmouseout="this.style.background='rgba(255, 255, 255, 0.05)'">Cost Impact</a>
+                    </div>
+                </div>
+
                 <div class="tabs">
                     <div class="tab" data-tab="generate">Generate Plan</div>
                     <div class="tab active" data-tab="upload">Upload Plan</div>
@@ -1445,8 +1479,14 @@
                     concrete_strength: 20 + Math.random() * 10       // MPa
                 };
 
-                document.getElementById('intel-loading').style.display = 'block';
-                document.getElementById('intel-results').style.display = 'none';
+                const isLive = document.getElementById('live-monitor-toggle').checked;
+
+                if (!isLive || document.getElementById('intel-results').style.display === 'none' || document.getElementById('intel-results').style.display === '') {
+                    document.getElementById('intel-loading').style.display = 'block';
+                    if (!isLive) {
+                        document.getElementById('intel-results').style.display = 'none';
+                    }
+                }
 
                 try {
                     const response = await fetch('/analyze_construction', {
@@ -1712,10 +1752,14 @@
                     }
 
                     document.getElementById('intel-results').style.display = 'flex';
-                    showAlert('Construction risk analyzed successfully.', 'success');
+                    if (!isLive) {
+                        showAlert('Construction risk analyzed successfully.', 'success');
+                    }
                 } catch (error) {
                     console.error('Error:', error);
-                    showAlert('An error occurred while analyzing construction risk', 'error');
+                    if (!isLive) {
+                        showAlert('An error occurred while analyzing construction risk', 'error');
+                    }
                 } finally {
                     document.getElementById('intel-loading').style.display = 'none';
                 }

@@ -18,6 +18,16 @@ from construction_intelligence import (
     generate_design_alternatives
 )
 
+from risk_calculators import calc_structural, calc_geotechnical, calc_schedule, calc_quality, calc_cost, calc_overall
+
+PROJECT_STATE = {
+    "structural": {"risk_pct": 0, "classification": "Pending", "mitigations": []},
+    "geotechnical": {"risk_pct": 0, "classification": "Pending", "mitigations": []},
+    "schedule": {"risk_pct": 0, "classification": "Pending", "mitigations": []},
+    "quality": {"risk_pct": 0, "classification": "Pending", "mitigations": []},
+    "cost": {"total_extra_cost": 0},
+}
+
 app = Flask(__name__)
 UPLOAD_FOLDER = 'uploads'
 OUTPUT_FOLDER = 'outputs'
@@ -454,6 +464,122 @@ def pipeline_report():
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
     return render_template('dashboard.html')
+
+@app.route('/structural-dashboard', methods=['GET', 'POST'])
+def structural_dashboard():
+    if request.method == 'POST':
+        data = request.json
+        res = calc_structural(
+            float(data.get('allowed_stress', 1)),
+            float(data.get('measured_stress', 0)),
+            float(data.get('allowed_settlement', 1)),
+            float(data.get('measured_settlement', 0)),
+            float(data.get('allowed_deflection', 1)),
+            float(data.get('actual_deflection', 0))
+        )
+        PROJECT_STATE["structural"] = res
+        return jsonify(res)
+    return render_template('structural_dashboard.html')
+
+@app.route('/geotechnical-dashboard', methods=['GET', 'POST'])
+def geotechnical_dashboard():
+    if request.method == 'POST':
+        data = request.json
+        res = calc_geotechnical(
+            float(data.get('base_capacity', 1)),
+            float(data.get('soil_factor', 1)),
+            float(data.get('actual_load', 0))
+        )
+        PROJECT_STATE["geotechnical"] = res
+        return jsonify(res)
+    return render_template('geotechnical_dashboard.html')
+
+@app.route('/schedule-dashboard', methods=['GET', 'POST'])
+def schedule_dashboard():
+    if request.method == 'POST':
+        data = request.json
+        res = calc_schedule(
+            float(data.get('planned_progress', 0)),
+            float(data.get('actual_progress', 0)),
+            float(data.get('elapsed_days', 1))
+        )
+        PROJECT_STATE["schedule"] = res
+        return jsonify(res)
+    return render_template('schedule_dashboard.html')
+
+@app.route('/quality-dashboard', methods=['GET', 'POST'])
+def quality_dashboard():
+    if request.method == 'POST':
+        data = request.json
+        res = calc_quality(
+            float(data.get('required_strength', 1)),
+            float(data.get('actual_strength', 0)),
+            float(data.get('alignment_error', 0)),
+            float(data.get('threshold', 1))
+        )
+        PROJECT_STATE["quality"] = res
+        return jsonify(res)
+    return render_template('quality_dashboard.html')
+
+@app.route('/cost-dashboard', methods=['GET', 'POST'])
+def cost_dashboard():
+    if request.method == 'POST':
+        data = request.json
+        res = calc_cost(
+            float(data.get('extra_steel', 0)),
+            float(data.get('steel_rate', 0)),
+            float(data.get('extra_concrete', 0)),
+            float(data.get('concrete_rate', 0)),
+            float(data.get('delay_days', 0)),
+            float(data.get('daily_cost', 0))
+        )
+        PROJECT_STATE["cost"] = res
+        return jsonify(res)
+    return render_template('cost_dashboard.html')
+
+@app.route('/mitigation-dashboard', methods=['GET'])
+def mitigation_dashboard():
+    # Safely get risk scores
+    struct_r = PROJECT_STATE.get("structural", {}).get("risk_pct", 0)
+    geo_r = PROJECT_STATE.get("geotechnical", {}).get("risk_pct", 0)
+    sched_r = PROJECT_STATE.get("schedule", {}).get("risk_pct", 0)
+    qual_r = PROJECT_STATE.get("quality", {}).get("risk_pct", 0)
+    
+    overall_risk = calc_overall(
+        float(struct_r) if isinstance(struct_r, (int, float)) else 0.0,
+        float(geo_r) if isinstance(geo_r, (int, float)) else 0.0,
+        float(sched_r) if isinstance(sched_r, (int, float)) else 0.0,
+        float(qual_r) if isinstance(qual_r, (int, float)) else 0.0
+    )
+    
+    all_mitigations = []
+    for key in ["structural", "geotechnical", "schedule", "quality"]:
+        m = PROJECT_STATE.get(key, {}).get("mitigations", [])
+        if isinstance(m, list):
+            all_mitigations.extend(m)
+    
+    # Remove duplicates but preserve order
+    seen = set()
+    unique_mitigations = [x for x in all_mitigations if not (x in seen or seen.add(x))]
+
+    state = {
+        "overall_health": overall_risk,
+        "structural_risk": struct_r,
+        "structural_class": PROJECT_STATE.get("structural", {}).get("classification", "Pending"),
+        "geotechnical_risk": geo_r,
+        "geotechnical_class": PROJECT_STATE.get("geotechnical", {}).get("classification", "Pending"),
+        "schedule_risk": sched_r,
+        "schedule_class": PROJECT_STATE.get("schedule", {}).get("classification", "Pending"),
+        "quality_risk": qual_r,
+        "quality_class": PROJECT_STATE.get("quality", {}).get("classification", "Pending"),
+        "cost_impact": PROJECT_STATE.get("cost", {}).get("total_extra_cost", 0),
+        "mitigations": unique_mitigations
+    }
+    
+    if request.headers.get('Accept') == 'application/json':
+        return jsonify(state)
+        
+    return render_template('mitigation_dashboard.html', state=state)
 
 if __name__ == '__main__':
     app.run(debug=True)

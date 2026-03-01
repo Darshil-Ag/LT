@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overall Mitigation Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .glass-card {
+            background: rgba(35, 35, 45, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .risk-banner {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left-width: 6px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .bg-red-gradient {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.2));
+            border-left-color: #ef4444;
+        }
+
+        .bg-yellow-gradient {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(161, 98, 7, 0.2));
+            border-left-color: #eab308;
+        }
+
+        .bg-green-gradient {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(21, 128, 61, 0.2));
+            border-left-color: #22c55e;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+    <div id="canvas-container"></div>
+    <div class="max-w-6xl mx-auto p-8 relative z-10 pt-16">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-4xl font-semibold text-[#5ee6d0] drop-shadow-[0_0_15px_rgba(94,230,208,0.5)]">Project
+                Mitigation Engine</h1>
+            <a href="/dashboard" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
+                Main</a>
+        </div>
+
+        <!-- Overall Health Banner -->
+        <div
+            class="risk-banner rounded-2xl p-8 mb-8 
+            {% if state.overall_health > 70 %}bg-red-gradient{% elif state.overall_health > 30 %}bg-yellow-gradient{% else %}bg-green-gradient{% endif %}">
+            <h2 class="text-lg font-semibold text-gray-400 uppercase tracking-widest mb-2">Overall Project Health Risk
+            </h2>
+            <div class="flex items-end space-x-4">
+                <span
+                    class="text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">{{
+                    state.overall_health }}%</span>
+                <span
+                    class="text-2xl font-semibold mb-2 
+                    {% if state.overall_health > 70 %}text-red-400{% elif state.overall_health > 30 %}text-yellow-400{% else %}text-green-400{% endif %}">
+                    {% if state.overall_health > 70 %}Critical State{% elif state.overall_health > 30 %}Elevated Risk{%
+                    else %}On Track{% endif %}
+                </span>
+            </div>
+            <p class="text-gray-400 text-sm mt-4 font-medium italic">Aggregate score dynamically generated from all
+                specialized internal engines.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Risk Breakdown Grid -->
+            <div class="lg:col-span-2 grid grid-cols-2 gap-4">
+
+                <!-- Structural -->
+                <div class="stat-card p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div
+                            class="text-sm text-gray-400 uppercase font-semibold mb-1 flex items-center justify-between">
+                            Structural <i class="text-[#5ee6d0]">Engine</i>
+                        </div>
+                        <div class="text-4xl font-bold mt-2 text-white">{{ state.structural_risk }}%</div>
+                    </div>
+                    <div
+                        class="mt-5 inline-flex align-middle justify-center px-3 py-1.5 border rounded-full text-xs font-semibold
+                        {% if state.structural_risk >= 100 %}bg-red-500/10 border-red-500/30 text-red-400{% elif state.structural_risk >= 80 %}bg-yellow-500/10 border-yellow-500/30 text-yellow-400{% else %}bg-green-500/10 border-green-500/30 text-green-400{% endif %}">
+                        {{ state.structural_class }}
+                    </div>
+                </div>
+
+                <!-- Geotechnical -->
+                <div class="stat-card p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div
+                            class="text-sm text-gray-400 uppercase font-semibold mb-1 flex items-center justify-between">
+                            Geotechnical <i class="text-[#5ee6d0]">Engine</i>
+                        </div>
+                        <div class="text-4xl font-bold mt-2 text-white">{{ state.geotechnical_risk }}%</div>
+                    </div>
+                    <div
+                        class="mt-5 inline-flex align-middle justify-center px-3 py-1.5 border rounded-full text-xs font-semibold
+                        {% if state.geotechnical_risk > 100 %}bg-red-500/10 border-red-500/30 text-red-400{% elif state.geotechnical_risk > 0 %}bg-yellow-500/10 border-yellow-500/30 text-yellow-400{% else %}bg-green-500/10 border-green-500/30 text-green-400{% endif %}">
+                        {{ state.geotechnical_class }}
+                    </div>
+                </div>
+
+                <!-- Schedule -->
+                <div class="stat-card p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div
+                            class="text-sm text-gray-400 uppercase font-semibold mb-1 flex items-center justify-between">
+                            Schedule <i class="text-[#5ee6d0]">Engine</i>
+                        </div>
+                        <div class="text-4xl font-bold mt-2 text-white">{{ state.schedule_risk }}%</div>
+                    </div>
+                    <div
+                        class="mt-5 inline-flex align-middle justify-center px-3 py-1.5 border rounded-full text-xs font-semibold
+                        {% if state.schedule_risk > 0 %}bg-orange-500/10 border-orange-500/30 text-orange-400{% else %}bg-green-500/10 border-green-500/30 text-green-400{% endif %}">
+                        {{ state.schedule_class }}
+                    </div>
+                </div>
+
+                <!-- Quality -->
+                <div class="stat-card p-6 rounded-2xl shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div
+                            class="text-sm text-gray-400 uppercase font-semibold mb-1 flex items-center justify-between">
+                            Quality <i class="text-[#5ee6d0]">Engine</i>
+                        </div>
+                        <div class="text-4xl font-bold mt-2 text-white">{{ state.quality_risk }}%</div>
+                    </div>
+                    <div
+                        class="mt-5 inline-flex align-middle justify-center px-3 py-1.5 border rounded-full text-xs font-semibold
+                        {% if state.quality_risk >= 100 %}bg-red-500/10 border-red-500/30 text-red-400{% else %}bg-green-500/10 border-green-500/30 text-green-400{% endif %}">
+                        {{ state.quality_class }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Impact Side Panel -->
+            <div class="glass-card p-8 flex flex-col border border-[#ef4444]/30 shadow-[0_0_30px_rgba(239,68,68,0.1)]">
+                <h3 class="text-gray-400 uppercase tracking-widest text-sm font-semibold mb-4 text-[#ef4444]">Financial
+                    Impact Radar</h3>
+                <div class="text-5xl font-bold text-white mb-2 pb-4 border-b border-white/10">+${{ state.cost_impact }}
+                </div>
+                <p class="text-sm text-gray-400 mt-4 leading-relaxed font-medium">Extra projected escalation based on
+                    aggregated delay times and material consumption metrics.</p>
+                <a href="/cost-dashboard"
+                    class="mt-auto block text-center bg-white/5 hover:bg-white/10 border border-white/10 py-2 rounded-lg text-sm transition-colors text-[#5ee6d0]">View
+                    Cost Breakdown</a>
+            </div>
+        </div>
+
+        <!-- Mitigation Actions -->
+        <div class="glass-card p-8">
+            <h2 class="text-2xl font-bold text-[#5ee6d0] mb-6 flex items-center border-b border-white/10 pb-4">
+                <svg class="w-6 h-6 mr-3 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Active Mitigation Intelligence
+            </h2>
+
+            {% if state.mitigations|length > 0 %}
+            <div class="space-y-4">
+                {% for action in state.mitigations %}
+                <div
+                    class="flex items-start p-5 bg-white/5 hover:bg-white/10 transition-colors rounded-xl border border-white/5">
+                    <div
+                        class="bg-[#5ee6d0]/20 rounded-full p-2 mr-4 flex-shrink-0 border border-[#5ee6d0]/30 shadow-[0_0_10px_rgba(94,230,208,0.2)]">
+                        <svg class="w-5 h-5 text-[#5ee6d0]" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <span class="font-medium text-lg text-white mt-1">{{ action }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="p-10 text-center text-gray-500 bg-white/5 rounded-2xl border border-white/10 border-dashed">
+                <svg class="w-16 h-16 mx-auto text-green-500 mb-4 opacity-70" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <p class="text-lg text-white font-medium">All systems green.</p>
+                <p class="text-sm mt-2">No structural, geotechnical, schedule, or quality mitigations triggered on
+                    individual domains.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <script>
+        // Three.js Background
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const gridHelper = new THREE.GridHelper(100, 50, 0x5ee6d0, 0x36a18b);
+        scene.add(gridHelper);
+
+        const particles = new THREE.Group();
+        scene.add(particles);
+        for (let i = 0; i < 100; i++) {
+            const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+            const material = new THREE.MeshBasicMaterial({ color: 0x5ee6d0, transparent: true, opacity: Math.random() * 0.5 + 0.1 });
+            const particle = new THREE.Mesh(geometry, material);
+            particle.position.set(Math.random() * 40 - 20, Math.random() * 40 - 20, Math.random() * 40 - 20);
+            particle.userData = { vx: Math.random() * 0.02 - 0.01, vy: Math.random() * 0.02 - 0.01, vz: Math.random() * 0.02 - 0.01 };
+            particles.add(particle);
+        }
+
+        camera.position.z = 30; camera.position.y = 15; camera.lookAt(0, 0, 0);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            gridHelper.rotation.y += 0.001;
+            particles.children.forEach(particle => {
+                particle.position.x += particle.userData.vx;
+                particle.position.y += particle.userData.vy;
+                particle.position.z += particle.userData.vz;
+                if (Math.abs(particle.position.x) > 30 || Math.abs(particle.position.y) > 30 || Math.abs(particle.position.z) > 30) {
+                    particle.position.set(Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10);
+                }
+            });
+            renderer.render(scene, camera);
+        }
+        window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+        animate();
+    </script>
+</body>
+
+</html>
