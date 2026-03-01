@@ -66,6 +66,16 @@
             box-shadow: 0 15px 25px rgba(94, 230, 208, 0.4);
         }
 
+        .btn-live {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #ffffff;
+        }
+
+        .btn-live.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: pulse 2s infinite;
+        }
+
         label {
             color: #5ee6d0;
             margin-bottom: 0.5rem;
@@ -73,199 +83,135 @@
             font-size: 0.9rem;
         }
 
-        /* Toggle Switch CSS */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.2);
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: #5ee6d0;
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(24px);
-        }
-
-        /* Blinking dot for live status */
-        .live-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #ef4444;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 10px #ef4444;
-        }
-
-        .live-active .live-dot {
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
+        @keyframes pulse {
             0% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
             }
 
-            50% {
-                opacity: 0.3;
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
             }
 
             100% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
             }
         }
     </style>
 </head>
 
-<body class="min-h-screen pb-12">
+<body class="min-h-screen">
     <div id="canvas-container"></div>
     <div class="max-w-6xl mx-auto p-8 relative z-10 pt-16">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-4xl font-semibold text-[#5ee6d0] drop-shadow-[0_0_15px_rgba(94,230,208,0.5)]">Structural
                 Risk Engine</h1>
-            <a href="/dashboard" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
+            <a href="/" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
                 Main</a>
         </div>
 
-        <!-- Live Monitoring Bar -->
-        <div
-            class="glass-card p-6 mb-8 flex justify-between items-center bg-black/40 border-[#5ee6d0]/30 shadow-[0_0_20px_rgba(94,230,208,0.1)]">
-            <div class="flex items-center space-x-4">
-                <div id="status-indicator" class="flex items-center text-gray-400 font-semibold tracking-wider">
-                    <span class="live-dot bg-gray-500 shadow-none"></span> <span id="status-text">SYSTEM IDLE</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Column: Inputs & Explanations -->
+            <div class="lg:col-span-4 space-y-8">
+                <div class="glass-card p-6">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                        <h2 class="text-xl font-semibold text-[#5ee6d0]">Input Parameters</h2>
+                        <button id="live-toggle"
+                            class="btn-primary btn-live text-xs py-1 px-3 rounded-full flex items-center">
+                            <span class="mr-1">⚫</span> Live Monitor off
+                        </button>
+                    </div>
+                    <form id="calc-form" class="space-y-4">
+                        <div>
+                            <label>Allowed Beam Stress (MPa)</label>
+                            <input type="number" step="0.01" id="allowed_stress" value="250" class="glass-input">
+                        </div>
+                        <div>
+                            <label>Measured Beam Stress (MPa)</label>
+                            <input type="number" step="0.01" id="measured_stress" value="200" class="glass-input">
+                        </div>
+                        <div>
+                            <label>Allowed Settlement (mm)</label>
+                            <input type="number" step="0.01" id="allowed_settlement" value="25" class="glass-input">
+                        </div>
+                        <div>
+                            <label>Measured Settlement (mm)</label>
+                            <input type="number" step="0.01" id="measured_settlement" value="15" class="glass-input">
+                        </div>
+                        <div>
+                            <label>Allowed Deflection (mm)</label>
+                            <input type="number" step="0.01" id="allowed_deflection" value="30" class="glass-input">
+                        </div>
+                        <div>
+                            <label>Actual Deflection (mm)</label>
+                            <input type="number" step="0.01" id="actual_deflection" value="10"
+                                class="glass-input transition-colors duration-200">
+                        </div>
+                        <button type="submit" class="w-full btn-primary mt-6">Analyze Risk</button>
+                    </form>
                 </div>
-                <p class="text-sm text-gray-400 border-l border-white/20 pl-4">Simulate continuous sensor data ingestion
-                    from the field</p>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-sm font-medium text-white">Live Monitoring</span>
-                <label class="switch">
-                    <input type="checkbox" id="live-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column: Inputs -->
-            <div class="glass-card p-8 lg:col-span-1 border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Sensor Parameters
-                </h2>
-                <form id="calc-form" class="space-y-4">
-                    <div>
-                        <label>Allowed Beam Stress (MPa)</label>
-                        <input type="number" step="0.01" id="allowed_stress" value="250"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Measured Beam Stress (MPa)</label>
-                        <input type="number" step="0.01" id="measured_stress" value="200"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Allowed Settlement (mm)</label>
-                        <input type="number" step="0.01" id="allowed_settlement" value="25"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Measured Settlement (mm)</label>
-                        <input type="number" step="0.01" id="measured_settlement" value="15"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Allowed Deflection (mm)</label>
-                        <input type="number" step="0.01" id="allowed_deflection" value="30"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Actual Deflection (mm)</label>
-                        <input type="number" step="0.01" id="actual_deflection" value="10"
-                            class="glass-input transition-all">
-                    </div>
-                    <button type="submit" id="analyze-btn" class="w-full btn-primary mt-6">Analyze Risk</button>
-                </form>
+                <div class="glass-card p-6 border-l-4 border-l-blue-500">
+                    <h3 class="text-lg font-semibold text-blue-400 mb-2">Engine Intelligence</h3>
+                    <p class="text-sm text-gray-300 leading-relaxed">
+                        <strong class="text-white">Ideal Benchmark:</strong> Structurally perfect design operates at
+                        roughly <span class="text-[#5ee6d0]">50% - 60%</span> of the allowed capacity to account for
+                        unforeseen dynamic loads (Factor of Safety).<br><br>
+                        Approaching <span class="text-yellow-400">100%</span> (Ratio 1.0) means elements are yielding.
+                        Crossing 100% triggers mandatory redesign mitigations to prevent catastrophic failure.
+                    </p>
+                </div>
             </div>
 
             <!-- Right Column: Results & Graphs -->
-            <div class="glass-card p-8 lg:col-span-2 flex flex-col border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Real-Time Risk
-                    Analysis</h2>
-                <div id="results" class="hidden flex-1 flex flex-col space-y-6">
+            <div class="lg:col-span-8 glass-card p-8 flex flex-col">
+                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Real-time Risk
+                    Telemetry</h2>
 
+                <div id="results" class="hidden flex-1 flex flex-col space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Banner -->
+                        <!-- Risk Banner -->
                         <div class="p-6 rounded-xl text-center shadow-lg border border-white/10 flex flex-col justify-center"
                             id="risk-banner">
-                            <div class="text-sm font-medium uppercase tracking-wider mb-1 opacity-80">Overall Structural
-                                Risk</div>
+                            <div class="text-sm font-medium uppercase tracking-wider mb-1 opacity-80">Aggregate Risk
+                                Level</div>
                             <div class="text-6xl font-bold mb-2 drop-shadow-md"><span id="risk_pct"></span>%</div>
                             <div class="text-xl font-semibold tracking-wide" id="classification"></div>
                         </div>
 
-                        <!-- Explanations & Comparisons -->
-                        <div class="bg-white/5 p-5 rounded-xl border border-white/10 flex flex-col space-y-3">
-                            <h3
-                                class="text-sm text-gray-400 uppercase tracking-widest font-semibold border-b border-white/10 pb-2">
-                                Analysis Breakdown</h3>
-
-                            <div class="text-xs space-y-2 text-gray-300">
-                                <p><span class="text-[#5ee6d0] font-semibold">Ideal State:</span> Ratios should remain
-                                    below <span class="text-white">0.5 (50%)</span> for optimal safety factor.</p>
-                                <p><span class="text-yellow-400 font-semibold">Previous Reading:</span> Risk was <span
-                                        id="old-risk-text" class="text-white font-mono">--%</span> prior to last scan.
-                                </p>
-                                <p><span class="text-blue-400 font-semibold">Current State:</span> Stress is <span
-                                        id="exp-stress" class="text-white">--</span> of allowed. Settlement is <span
-                                        id="exp-settlement" class="text-white">--</span> of allowed. Deflection is <span
-                                        id="exp-deflection" class="text-white">--</span> of allowed.</p>
-                                <p class="pt-2 italic text-gray-400" id="trend-analysis"></p>
-                            </div>
+                        <!-- Ratios & Metrics -->
+                        <div class="space-y-4 pt-4 pl-4 border-l border-white/10 flex flex-col justify-center">
+                            <h3 class="font-medium text-gray-300 mb-1 border-b border-white/5 pb-2">Component Ratios
+                                (Target < 0.8)</h3>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-400">Stress Capacity:</span>
+                                        <span
+                                            class="font-mono bg-white/10 px-3 py-1 rounded text-[#5ee6d0] transition-all"
+                                            id="stress_ratio"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-400">Settlement Margin:</span>
+                                        <span
+                                            class="font-mono bg-white/10 px-3 py-1 rounded text-[#5ee6d0] transition-all"
+                                            id="settlement_ratio"></span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-gray-400">Deflection Tolerance:</span>
+                                        <span
+                                            class="font-mono bg-white/10 px-3 py-1 rounded text-[#5ee6d0] transition-all"
+                                            id="deflection_ratio"></span>
+                                    </div>
                         </div>
                     </div>
 
-                    <!-- Live Chart -->
-                    <div class="bg-black/30 p-4 rounded-xl border border-white/5" style="height: 250px;">
-                        <canvas id="liveRiskChart"></canvas>
+                    <!-- Chart section -->
+                    <div class="h-64 mt-6 w-full relative bg-black/20 rounded-xl p-4 border border-white/5">
+                        <canvas id="structChart"></canvas>
                     </div>
 
                     <!-- Mitigations -->
-                    <div id="mitigations-container" class="hidden mt-auto pt-4">
-                        <h3
-                            class="font-semibold text-[#ff7f7f] mb-3 flex items-center bg-red-900/20 p-2 rounded-lg border border-red-500/20">
-                            <svg class="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor"
+                    <div id="mitigations-container" class="hidden mt-auto pt-6 border-t border-red-500/30">
+                        <h3 class="font-semibold text-[#ff7f7f] mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 animate-pulse" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
@@ -273,12 +219,23 @@
                             </svg>
                             Required Structural Mitigations
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="mitigations-list"></div>
+                        <ul id="mitigations-list" class="list-disc pl-5 space-y-2 text-[#ff7f7f] text-sm"></ul>
                     </div>
                 </div>
+
                 <div id="empty-state"
-                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-64">
-                    <p>Enter parameters or enable <span class="text-[#5ee6d0]">Live Monitoring</span></p>
+                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-96">
+                    <div class="space-y-4">
+                        <svg class="w-16 h-16 mx-auto text-gray-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            </path>
+                        </svg>
+                        <p>Awaiting structural telemetry...<br>Enter parameters and click <span
+                                class="text-[#5ee6d0]">Analyze Risk</span> or toggle <span class="text-blue-400">Live
+                                Monitor</span>.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -293,10 +250,8 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
-
         const gridHelper = new THREE.GridHelper(100, 50, 0x5ee6d0, 0x36a18b);
         scene.add(gridHelper);
-
         const particles = new THREE.Group();
         scene.add(particles);
         for (let i = 0; i < 100; i++) {
@@ -307,9 +262,7 @@
             particle.userData = { vx: Math.random() * 0.02 - 0.01, vy: Math.random() * 0.02 - 0.01, vz: Math.random() * 0.02 - 0.01 };
             particles.add(particle);
         }
-
         camera.position.z = 30; camera.position.y = 15; camera.lookAt(0, 0, 0);
-
         function animate() {
             requestAnimationFrame(animate);
             gridHelper.rotation.y += 0.001;
@@ -326,57 +279,62 @@
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         animate();
 
-        // Chart Initialization
+        // Dashboard Logic
+        let chartInstance = null;
         Chart.defaults.color = '#aaaaaa';
-        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
-        let liveChart = null;
-        const maxDataPoints = 15;
-        const chartData = {
-            labels: [],
-            datasets: [
-                { label: 'Overall Risk %', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.4, fill: true, borderWidth: 2 },
-                { label: 'Stress Ratio', data: [], borderColor: '#5ee6d0', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.4, fill: false },
-                { label: 'Settlement Ratio', data: [], borderColor: '#3b82f6', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.4, fill: false }
-            ]
-        };
-
-        function initChart() {
-            const ctx = document.getElementById('liveRiskChart').getContext('2d');
-            liveChart = new Chart(ctx, {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { min: 0, max: 120, title: { display: true, text: 'Value / %', color: '#666' } },
-                        x: { display: false } // Hide x-axis labels for scrolling effect
-                    },
-                    plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    animation: { duration: 400 }
-                }
-            });
-        }
-
-        // Dashboard Logic & Live Monitoring
-        let previousRisk = null;
+        let isLive = false;
         let liveInterval = null;
-        const toggle = document.getElementById('live-toggle');
-        const statusIndicator = document.getElementById('status-indicator');
-        const statusText = document.getElementById('status-text');
 
-        async function fetchAnalysis() {
+        const liveToggleBtn = document.getElementById('live-toggle');
+        liveToggleBtn.addEventListener('click', () => {
+            isLive = !isLive;
+            if (isLive) {
+                liveToggleBtn.classList.add('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1 shadow-[0_0_5px_#fff] rounded-full">🔴</span> Live Monitor ON';
+                // Trigger live simulation every 2.5s
+                liveInterval = setInterval(() => {
+                    // Random fluctuations simulating sensor reading noise
+                    document.getElementById('measured_stress').value = (Math.random() * 280 + 100).toFixed(2);
+                    document.getElementById('measured_settlement').value = (Math.random() * 35).toFixed(2);
+                    document.getElementById('actual_deflection').value = (Math.random() * 40).toFixed(2);
+
+                    // Flash inputs gently
+                    const inputs = document.querySelectorAll('.glass-input');
+                    inputs.forEach(el => {
+                        el.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                        setTimeout(() => el.style.borderColor = 'rgba(94, 230, 208, 0.3)', 300);
+                    });
+
+                    document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+                }, 2500);
+                // initial trigger
+                document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+            } else {
+                liveToggleBtn.classList.remove('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1">⚫</span> Live Monitor off';
+                clearInterval(liveInterval);
+            }
+        });
+
+        document.getElementById('calc-form').addEventListener('submit', async (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+
+            const allowedR = parseFloat(document.getElementById('allowed_stress').value) || 1;
+            const measR = parseFloat(document.getElementById('measured_stress').value) || 0;
+            const allowedS = parseFloat(document.getElementById('allowed_settlement').value) || 1;
+            const measS = parseFloat(document.getElementById('measured_settlement').value) || 0;
+            const allowedD = parseFloat(document.getElementById('allowed_deflection').value) || 1;
+            const measD = parseFloat(document.getElementById('actual_deflection').value) || 0;
+
             const data = {
-                allowed_stress: parseFloat(document.getElementById('allowed_stress').value),
-                measured_stress: parseFloat(document.getElementById('measured_stress').value),
-                allowed_settlement: parseFloat(document.getElementById('allowed_settlement').value),
-                measured_settlement: parseFloat(document.getElementById('measured_settlement').value),
-                allowed_deflection: parseFloat(document.getElementById('allowed_deflection').value),
-                actual_deflection: parseFloat(document.getElementById('actual_deflection').value)
+                allowed_stress: allowedR,
+                measured_stress: measR,
+                allowed_settlement: allowedS,
+                measured_settlement: measS,
+                allowed_deflection: allowedD,
+                actual_deflection: measD
             };
 
             const response = await fetch('/structural-dashboard', {
@@ -386,63 +344,91 @@
             });
 
             const res = await response.json();
-            updateUI(res);
-        }
 
-        function updateUI(res) {
             document.getElementById('empty-state').classList.add('hidden');
             document.getElementById('results').classList.remove('hidden');
 
-            if (!liveChart) initChart();
+            // Formats ratios colors dynamically
+            const colorize = (val) => {
+                if (val > 1.0) return 'text-red-400 font-bold';
+                if (val > 0.8) return 'text-yellow-400 font-bold';
+                return 'text-[#5ee6d0]';
+            };
 
-            // Store old risk safely
-            if (previousRisk !== null) {
-                document.getElementById('old-risk-text').textContent = previousRisk + '%';
+            const strRatioEl = document.getElementById('stress_ratio');
+            strRatioEl.textContent = res.stress_ratio;
+            strRatioEl.className = `font-mono bg-white/10 px-3 py-1 rounded transition-all ${colorize(res.stress_ratio)}`;
 
-                const trendEl = document.getElementById('trend-analysis');
-                if (res.risk_pct > previousRisk) {
-                    trendEl.innerHTML = `<span class="text-red-400">▲ Risk slightly elevated since last reading. Structural elements under stress.</span>`;
-                } else if (res.risk_pct < previousRisk) {
-                    trendEl.innerHTML = `<span class="text-green-400">▼ Risk diminished. Stress loads normalizing.</span>`;
-                } else {
-                    trendEl.innerHTML = `No change in risk profile.`;
-                }
-            } else {
-                document.getElementById('old-risk-text').textContent = 'N/A';
-            }
-            previousRisk = res.risk_pct;
+            const setRatioEl = document.getElementById('settlement_ratio');
+            setRatioEl.textContent = res.settlement_ratio;
+            setRatioEl.className = `font-mono bg-white/10 px-3 py-1 rounded transition-all ${colorize(res.settlement_ratio)}`;
 
-            // Update main banner
+            const defRatioEl = document.getElementById('deflection_ratio');
+            defRatioEl.textContent = res.deflection_ratio;
+            defRatioEl.className = `font-mono bg-white/10 px-3 py-1 rounded transition-all ${colorize(res.deflection_ratio)}`;
+
             document.getElementById('risk_pct').textContent = res.risk_pct;
             document.getElementById('classification').textContent = res.classification;
 
             const banner = document.getElementById('risk-banner');
-            banner.className = 'p-6 rounded-xl text-center text-white transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-center ';
-            if (res.classification === 'Safe') banner.className += 'bg-gradient-to-br from-green-500 to-green-700';
-            else if (res.classification === 'Warning') banner.className += 'bg-gradient-to-br from-yellow-500 to-orange-600';
-            else banner.className += 'bg-gradient-to-br from-red-600 to-red-800';
+            banner.className = 'p-6 rounded-xl text-center text-white transition-all duration-500 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-center ';
+            if (res.classification === 'Safe') banner.className += 'bg-gradient-to-br from-green-500/80 to-green-700/80';
+            else if (res.classification === 'Warning') banner.className += 'bg-gradient-to-br from-yellow-500/80 to-orange-600/80';
+            else banner.className += 'bg-gradient-to-br from-red-600/90 to-red-900/90 shadow-[0_0_30px_rgba(220,38,38,0.5)]';
 
-            // Explanations
-            document.getElementById('exp-stress').textContent = (res.stress_ratio * 100).toFixed(0) + '%';
-            document.getElementById('exp-settlement').textContent = (res.settlement_ratio * 100).toFixed(0) + '%';
-            document.getElementById('exp-deflection').textContent = (res.deflection_ratio * 100).toFixed(0) + '%';
+            // Draw Comparison Radar Chart
+            const ctx = document.getElementById('structChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
 
-            // Update Graph
-            const timeLabel = new Date().toLocaleTimeString();
-            chartData.labels.push(timeLabel);
-            chartData.datasets[0].data.push(res.risk_pct);
-            chartData.datasets[1].data.push(res.stress_ratio * 100);
-            chartData.datasets[2].data.push(res.settlement_ratio * 100);
+            chartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Structural Stress', 'Foundation Settlement', 'Beam Deflection'],
+                    datasets: [
+                        {
+                            label: 'Measured Conditions',
+                            data: [res.stress_ratio * 100, res.settlement_ratio * 100, res.deflection_ratio * 100],
+                            backgroundColor: res.risk_pct > 100 ? 'rgba(239, 68, 68, 0.4)' : 'rgba(94, 230, 208, 0.4)',
+                            borderColor: res.risk_pct > 100 ? '#ef4444' : '#5ee6d0',
+                            pointBackgroundColor: res.risk_pct > 100 ? '#ef4444' : '#5ee6d0',
+                            pointBorderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Ideal Safe Envelope (50%)',
+                            data: [50, 50, 50],
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderColor: '#3b82f6',
+                            borderDash: [5, 5],
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Failure Limit (100%)',
+                            data: [100, 100, 100],
+                            backgroundColor: 'rgba(255, 255, 255, 0)',
+                            borderColor: '#eab308',
+                            borderWidth: 1.5,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            pointLabels: { color: '#ccc', font: { size: 12 } },
+                            ticks: { display: false, max: Math.max(120, res.stress_ratio * 100 + 10, res.risk_pct) }
+                        }
+                    },
+                    plugins: { legend: { position: 'bottom', labels: { color: '#aaa', padding: 20 } } },
+                    animation: { duration: isLive ? 400 : 1000 } // smooth faster animation for live monitoring
+                }
+            });
 
-            if (chartData.labels.length > maxDataPoints) {
-                chartData.labels.shift();
-                chartData.datasets[0].data.shift();
-                chartData.datasets[1].data.shift();
-                chartData.datasets[2].data.shift();
-            }
-            liveChart.update();
-
-            // Mitigations
             const mitContainer = document.getElementById('mitigations-container');
             const mitList = document.getElementById('mitigations-list');
             mitList.innerHTML = '';
@@ -450,67 +436,12 @@
             if (res.mitigations.length > 0) {
                 mitContainer.classList.remove('hidden');
                 res.mitigations.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = "bg-red-500/10 border border-red-500/20 text-red-200 p-2 rounded text-sm flex items-center";
-                    div.innerHTML = `<span class="h-2 w-2 bg-red-500 rounded-full mr-2"></span> ${m}`;
-                    mitList.appendChild(div);
+                    const li = document.createElement('li');
+                    li.textContent = m;
+                    mitList.appendChild(li);
                 });
             } else {
                 mitContainer.classList.add('hidden');
-            }
-        }
-
-        document.getElementById('calc-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            fetchAnalysis();
-        });
-
-        // Live Simulation Loop
-        function simulateData() {
-            const inputs = ['measured_stress', 'measured_settlement', 'actual_deflection'];
-            inputs.forEach(id => {
-                const el = document.getElementById(id);
-                const current = parseFloat(el.value);
-                // Random fluctuation between -5% and +5%
-                const change = current * (Math.random() * 0.1 - 0.05);
-                let newVal = current + change;
-                if (newVal < 0) newVal = Math.random() * 5; // ensure positive
-
-                el.value = newVal.toFixed(2);
-
-                // Highlight flash effect
-                el.classList.add('bg-blue-500/30', 'border-blue-400');
-                setTimeout(() => {
-                    el.classList.remove('bg-blue-500/30', 'border-blue-400');
-                }, 400);
-            });
-            fetchAnalysis();
-        }
-
-        toggle.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                statusIndicator.classList.add('live-active');
-                statusText.textContent = "LIVE: SENSOR POLLING";
-                statusText.className = "text-[#5ee6d0] font-bold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-[#5ee6d0] shadow-[0_0_10px_#5ee6d0]";
-                // Disable manual inputs
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = true);
-                document.getElementById('analyze-btn').disabled = true;
-                document.getElementById('analyze-btn').classList.add('opacity-50', 'cursor-not-allowed');
-
-                // Fetch immediately, then loop
-                simulateData();
-                liveInterval = setInterval(simulateData, 2500);
-            } else {
-                statusIndicator.classList.remove('live-active');
-                statusText.textContent = "SYSTEM IDLE";
-                statusText.className = "text-gray-400 font-semibold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-gray-500 shadow-none";
-
-                clearInterval(liveInterval);
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = false);
-                document.getElementById('analyze-btn').disabled = false;
-                document.getElementById('analyze-btn').classList.remove('opacity-50', 'cursor-not-allowed');
             }
         });
     </script>

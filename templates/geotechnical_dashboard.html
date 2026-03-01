@@ -71,6 +71,16 @@
             box-shadow: 0 15px 25px rgba(94, 230, 208, 0.4);
         }
 
+        .btn-live {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #ffffff;
+        }
+
+        .btn-live.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: pulse 2s infinite;
+        }
+
         label {
             color: #5ee6d0;
             margin-bottom: 0.5rem;
@@ -78,198 +88,130 @@
             font-size: 0.9rem;
         }
 
-        /* Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.2);
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: #5ee6d0;
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(24px);
-        }
-
-        .live-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #ef4444;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 10px #ef4444;
-        }
-
-        .live-active .live-dot {
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
+        @keyframes pulse {
             0% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
             }
 
-            50% {
-                opacity: 0.3;
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
             }
 
             100% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
             }
         }
     </style>
 </head>
 
-<body class="min-h-screen pb-12">
+<body class="min-h-screen">
     <div id="canvas-container"></div>
     <div class="max-w-6xl mx-auto p-8 relative z-10 pt-16">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-4xl font-semibold text-[#5ee6d0] drop-shadow-[0_0_15px_rgba(94,230,208,0.5)]">Geotechnical
                 Risk Engine</h1>
-            <a href="/dashboard" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
+            <a href="/" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
                 Main</a>
         </div>
 
-        <div
-            class="glass-card p-6 mb-8 flex justify-between items-center bg-black/40 border-[#5ee6d0]/30 shadow-[0_0_20px_rgba(94,230,208,0.1)]">
-            <div class="flex items-center space-x-4">
-                <div id="status-indicator" class="flex items-center text-gray-400 font-semibold tracking-wider">
-                    <span class="live-dot bg-gray-500 shadow-none"></span> <span id="status-text">SYSTEM IDLE</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Left Column: Inputs & Explanations -->
+            <div class="lg:col-span-4 space-y-8">
+                <div class="glass-card p-6">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                        <h2 class="text-xl font-semibold text-[#5ee6d0]">Input Parameters</h2>
+                        <button id="live-toggle"
+                            class="btn-primary btn-live text-xs py-1 px-3 rounded-full flex items-center">
+                            <span class="mr-1">⚫</span> Live Monitor
+                        </button>
+                    </div>
+
+                    <form id="calc-form" class="space-y-4">
+                        <div>
+                            <label>Soil Type Designation</label>
+                            <select id="soil_type" class="glass-input">
+                                <option value="rock">Rock (High Capacity)</option>
+                                <option value="gravel">Gravel (Good)</option>
+                                <option value="sand" selected>Sand (Moderate)</option>
+                                <option value="clay">Clay (Variable/High Settlement)</option>
+                                <option value="fill">Fill/Mixed (Dangerous)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Tested Bearing Capacity (kN/m²)</label>
+                            <input type="number" step="0.1" id="bearing_capacity" value="150" class="glass-input">
+                        </div>
+                        <div>
+                            <label>Current Applied Load (kN/m²)</label>
+                            <input type="number" step="0.1" id="actual_load" value="110"
+                                class="glass-input transition-colors duration-200">
+                        </div>
+                        <button type="submit" class="w-full btn-primary mt-6">Analyze Soil Stability</button>
+                    </form>
                 </div>
-                <p class="text-sm text-gray-400 border-l border-white/20 pl-4">Simulate continuous ground/soil sensor
-                    polling</p>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-sm font-medium text-white">Live Monitoring</span>
-                <label class="switch">
-                    <input type="checkbox" id="live-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="glass-card p-8 lg:col-span-1 border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Input Parameters
-                </h2>
-                <form id="calc-form" class="space-y-4">
-                    <div>
-                        <label>Soil Type</label>
-                        <select id="soil_type" class="glass-input">
-                            <option value="rock">Rock</option>
-                            <option value="gravel">Gravel</option>
-                            <option value="sand" selected>Sand</option>
-                            <option value="clay">Clay</option>
-                            <option value="fill">Fill/Mixed</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Bearing Capacity (kN/m²)</label>
-                        <input type="number" step="0.1" id="bearing_capacity" value="150"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Actual Load (kN/m²)</label>
-                        <input type="number" step="0.1" id="actual_load" value="160" class="glass-input transition-all">
-                    </div>
-                    <button type="submit" id="analyze-btn" class="w-full btn-primary mt-6">Analyze Risk</button>
-                </form>
+                <div class="glass-card p-6 border-l-4 border-l-yellow-500">
+                    <h3 class="text-lg font-semibold text-yellow-400 mb-2">Engine Intelligence</h3>
+                    <p class="text-sm text-gray-300 leading-relaxed">
+                        <strong class="text-white">Ideal Benchmark:</strong> Actual structural loads should only be
+                        around <span class="text-[#5ee6d0]">33% to 50%</span> of the ultimate soil bearing capacity
+                        (Factor of Safety = 2.0 to 3.0).<br><br>
+                        A load approaching <span class="text-orange-400">80%</span> is flagged as a high-risk
+                        geotechnical condition, prompting foundation redesigns to prevent differential settlement and
+                        collapse.
+                    </p>
+                </div>
             </div>
 
-            <div class="glass-card p-8 lg:col-span-2 flex flex-col border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Real-Time Risk
-                    Analysis</h2>
+            <!-- Right Column: Results & Graphs -->
+            <div class="lg:col-span-8 glass-card p-8 flex flex-col">
+                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Foundation Analysis
+                    Telemetry</h2>
+
                 <div id="results" class="hidden flex-1 flex flex-col space-y-6">
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="p-6 rounded-xl text-center shadow-lg border border-white/10 flex flex-col justify-center"
-                            id="risk-banner">
-                            <div class="text-sm font-medium uppercase tracking-wider mb-1 opacity-80">Geotechnical Risk
-                            </div>
-                            <div class="text-6xl font-bold mb-2 drop-shadow-md"><span id="risk_pct"></span>%</div>
-                            <div class="text-xl font-semibold tracking-wide" id="classification"></div>
-                        </div>
-
-                        <!-- Explanations & Comparisons -->
-                        <div class="bg-white/5 p-5 rounded-xl border border-white/10 flex flex-col space-y-3">
-                            <h3
-                                class="text-sm text-gray-400 uppercase tracking-widest font-semibold border-b border-white/10 pb-2">
-                                Analysis Breakdown</h3>
-
-                            <div class="text-xs space-y-2 text-gray-300">
-                                <p><span class="text-[#5ee6d0] font-semibold">Ideal State:</span> Actual Load should be
-                                    ≤ 70% of Bearing Capacity to prevent shear failure.</p>
-                                <p><span class="text-yellow-400 font-semibold">Previous Reading:</span> Ground pressure
-                                    risk was <span id="old-risk-text" class="text-white font-mono">--%</span> prior to
-                                    last scan.</p>
-                                <p><span class="text-blue-400 font-semibold">Current State:</span> Actual Load is <span
-                                        id="exp-load-ratio" class="text-white font-mono">--%</span> of bearing capacity.
-                                </p>
-                                <p class="pt-2 italic text-gray-400" id="trend-analysis"></p>
-                            </div>
-                        </div>
+                    <!-- Banner -->
+                    <div class="p-6 rounded-xl text-center shadow-lg border border-white/10" id="risk-banner">
+                        <div class="text-sm font-medium uppercase tracking-wider mb-1 opacity-80">Geotechnical Risk
+                            Level</div>
+                        <div class="text-6xl font-bold mb-2 drop-shadow-md"><span id="risk_pct"></span>%</div>
+                        <div class="text-xl font-semibold tracking-wide" id="classification"></div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <div class="bg-black/30 p-4 rounded-xl border border-white/5" style="height: 200px;">
-                            <canvas id="geoBarChart"></canvas>
-                        </div>
-                        <div class="bg-black/30 p-4 rounded-xl border border-white/5" style="height: 200px;">
-                            <canvas id="liveRiskChart"></canvas>
-                        </div>
+                    <!-- Comparison Chart -->
+                    <div class="h-64 mt-4 relative bg-black/20 rounded-xl p-4 border border-white/5">
+                        <canvas id="geoChart"></canvas>
                     </div>
 
-                    <div id="mitigations-container" class="hidden mt-auto pt-4">
-                        <h3
-                            class="font-semibold text-[#ff7f7f] mb-3 flex items-center bg-red-900/20 p-2 rounded-lg border border-red-500/20">
-                            <svg class="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor"
+                    <!-- Mitigations -->
+                    <div id="mitigations-container" class="hidden mt-auto pt-6 border-t border-red-500/30">
+                        <h3 class="font-semibold text-[#ff7f7f] mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 animate-pulse" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
                                 </path>
                             </svg>
-                            Required Soil/Foundation Mitigations
+                            Required Geotechnical Interventions
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="mitigations-list"></div>
+                        <ul id="mitigations-list" class="list-disc pl-5 space-y-2 text-[#ff7f7f] text-sm font-medium">
+                        </ul>
                     </div>
                 </div>
+
                 <div id="empty-state"
-                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-64">
-                    <p>Enter parameters or enable <span class="text-[#5ee6d0]">Live Monitoring</span></p>
+                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-96">
+                    <div class="space-y-4">
+                        <svg class="w-16 h-16 mx-auto text-gray-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
+                        <p>Awaiting soil telemetry...<br>Enter parameters and click <span
+                                class="text-[#5ee6d0]">Analyze</span> or toggle <span class="text-blue-400">Live
+                                Monitor</span>.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -284,8 +226,10 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
+
         const gridHelper = new THREE.GridHelper(100, 50, 0x5ee6d0, 0x36a18b);
         scene.add(gridHelper);
+
         const particles = new THREE.Group();
         scene.add(particles);
         for (let i = 0; i < 100; i++) {
@@ -296,7 +240,9 @@
             particle.userData = { vx: Math.random() * 0.02 - 0.01, vy: Math.random() * 0.02 - 0.01, vz: Math.random() * 0.02 - 0.01 };
             particles.add(particle);
         }
+
         camera.position.z = 30; camera.position.y = 15; camera.lookAt(0, 0, 0);
+
         function animate() {
             requestAnimationFrame(animate);
             gridHelper.rotation.y += 0.001;
@@ -314,137 +260,128 @@
         animate();
 
         // Dashboard Logic
+        let chartInstance = null;
         Chart.defaults.color = '#aaaaaa';
         Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
-        let barChartInstance = null;
-        let lineChartInstance = null;
-        const maxDataPoints = 15;
-        const lineChartData = {
-            labels: [],
-            datasets: [
-                { label: 'Risk %', data: [], borderColor: '#eab308', backgroundColor: 'rgba(234, 179, 8, 0.1)', tension: 0.4, fill: true, borderWidth: 2 }
-            ]
-        };
-
-        function initLineChart() {
-            const ctx = document.getElementById('liveRiskChart').getContext('2d');
-            lineChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: lineChartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { min: 0, max: 150, title: { display: true, text: 'Risk Score %', color: '#666' } },
-                        x: { display: false }
-                    },
-                    plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    animation: { duration: 400 }
-                }
-            });
-        }
-
-        let previousRisk = null;
+        let isLive = false;
         let liveInterval = null;
-        const toggle = document.getElementById('live-toggle');
-        const statusIndicator = document.getElementById('status-indicator');
-        const statusText = document.getElementById('status-text');
 
-        async function fetchAnalysis() {
-            const data = {
+        const liveToggleBtn = document.getElementById('live-toggle');
+        liveToggleBtn.addEventListener('click', () => {
+            isLive = !isLive;
+            if (isLive) {
+                liveToggleBtn.classList.add('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1 shadow-[0_0_5px_#fff] rounded-full">🔴</span> Live Monitor ON';
+
+                // Trigger live simulation every 2 seconds
+                liveInterval = setInterval(() => {
+                    // Random load fluctuations on foundation
+                    let currentLoad = parseFloat(document.getElementById('actual_load').value) || 100;
+                    currentLoad += (Math.random() * 20 - 8); // Drift up slightly
+
+                    document.getElementById('actual_load').value = currentLoad.toFixed(2);
+
+                    const loadInput = document.getElementById('actual_load');
+                    loadInput.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                    setTimeout(() => loadInput.style.borderColor = 'rgba(94, 230, 208, 0.3)', 300);
+
+                    document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+                }, 2000);
+                document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+            } else {
+                liveToggleBtn.classList.remove('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1">⚫</span> Live Monitor off';
+                clearInterval(liveInterval);
+            }
+        });
+
+        document.getElementById('calc-form').addEventListener('submit', async (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+
+            const cap = parseFloat(document.getElementById('bearing_capacity').value);
+            const load = parseFloat(document.getElementById('actual_load').value);
+
+            const payload = {
                 soil_type: document.getElementById('soil_type').value,
-                bearing_capacity: parseFloat(document.getElementById('bearing_capacity').value),
-                actual_load: parseFloat(document.getElementById('actual_load').value)
+                bearing_capacity: cap,
+                actual_load: load
             };
 
             const response = await fetch('/geotechnical-dashboard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+                body: JSON.stringify(payload)
             });
 
             const res = await response.json();
-            updateUI(res, data);
-        }
+            updateGeotechnicalUI(res, load, cap);
+        });
 
-        function updateUI(res, payload) {
+        function updateGeotechnicalUI(res, load, cap) {
             document.getElementById('empty-state').classList.add('hidden');
             document.getElementById('results').classList.remove('hidden');
 
-            if (!lineChartInstance) initLineChart();
-
-            // Store old risk safely
-            if (previousRisk !== null) {
-                document.getElementById('old-risk-text').textContent = previousRisk.toFixed(1) + '%';
-
-                const trendEl = document.getElementById('trend-analysis');
-                if (res.risk_pct > previousRisk) {
-                    trendEl.innerHTML = `<span class="text-red-400">▲ Load increasing relative to bearing capacity.</span>`;
-                } else if (res.risk_pct < previousRisk) {
-                    trendEl.innerHTML = `<span class="text-green-400">▼ Load decreasing. Foundation stresses easing.</span>`;
-                } else {
-                    trendEl.innerHTML = `No change in foundation pressure profile.`;
-                }
-            } else {
-                document.getElementById('old-risk-text').textContent = 'N/A';
-            }
-            previousRisk = res.risk_pct;
-
-            // Update main banner
             document.getElementById('risk_pct').textContent = res.risk_pct;
-            document.getElementById('classification').textContent = res.classification;
+            document.getElementById('classification').textContent = res.classification || res.risk_level;
 
             const banner = document.getElementById('risk-banner');
             banner.className = 'p-6 rounded-xl text-center text-white transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-center ';
-            if (res.classification === 'Safe') banner.className += 'bg-gradient-to-br from-green-500 to-green-700';
-            else if (res.classification === 'Warning') banner.className += 'bg-gradient-to-br from-yellow-500 to-orange-600';
-            else banner.className += 'bg-gradient-to-br from-red-600 to-red-800';
+            if (res.classification === 'Safe' || res.risk_level === 'Stable') banner.className += 'bg-gradient-to-br from-green-500/80 to-green-700/80';
+            else if (res.classification === 'Warning' || res.risk_level === 'At-Risk') banner.className += 'bg-gradient-to-br from-yellow-500/80 to-orange-600/80';
+            else banner.className += 'bg-gradient-to-br from-red-600/90 to-red-900/90 shadow-[0_0_30px_rgba(220,38,38,0.5)]';
 
-            // Exp Update
-            const loadRatio = (payload.actual_load / payload.bearing_capacity) * 100;
-            document.getElementById('exp-load-ratio').textContent = loadRatio.toFixed(1) + '%';
+            // Draw Chart comparing Target/Ideal vs Current vs Limit
+            const ctx = document.getElementById('geoChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
 
-            // Draw Bar Chart
-            const ctxBar = document.getElementById('geoBarChart').getContext('2d');
-            if (barChartInstance) barChartInstance.destroy();
+            const idealLoad = cap * 0.4; // Assuming FS = 2.5 represents ideal
 
-            barChartInstance = new Chart(ctxBar, {
+            chartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Capacity vs Load'],
+                    labels: ['Foundation Forces (kN/m²)'],
                     datasets: [
-                        { label: 'Bearing Capacity', data: [payload.bearing_capacity], backgroundColor: '#5ee6d0' },
-                        { label: 'Actual Load', data: [payload.actual_load], backgroundColor: payload.actual_load > payload.bearing_capacity ? '#ef4444' : '#eab308' }
+                        {
+                            label: 'Ideal Design Load (FS=2.5)',
+                            data: [idealLoad],
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Live Monitored Load',
+                            data: [load],
+                            backgroundColor: load > (cap * 0.8) ? 'rgba(239, 68, 68, 0.8)' : (load > idealLoad ? 'rgba(234, 179, 8, 0.8)' : 'rgba(94, 230, 208, 0.8)'),
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Ultimate Bearing Limit',
+                            data: [cap],
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            borderColor: 'rgba(239, 68, 68, 0.4)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            borderRadius: 4
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, title: { display: true, text: 'kN/m²' } },
-                        x: { display: false }
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            max: Math.max(cap * 1.2, load * 1.2)
+                        },
+                        x: { grid: { display: false } }
                     },
                     plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } }
+                        legend: { position: 'bottom', labels: { color: '#ddd', padding: 15 } }
                     },
-                    animation: { duration: 400 }
+                    animation: { duration: isLive ? 300 : 800 }
                 }
             });
-
-            // Update Line Chart
-            const timeLabel = new Date().toLocaleTimeString();
-            lineChartData.labels.push(timeLabel);
-            lineChartData.datasets[0].data.push(res.risk_pct);
-
-            if (lineChartData.labels.length > maxDataPoints) {
-                lineChartData.labels.shift();
-                lineChartData.datasets[0].data.shift();
-            }
-            lineChartInstance.update();
 
             // Mitigations
             const mitContainer = document.getElementById('mitigations-container');
@@ -454,72 +391,41 @@
             if (res.mitigations && res.mitigations.length > 0) {
                 mitContainer.classList.remove('hidden');
                 res.mitigations.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = "bg-red-500/10 border border-red-500/20 text-red-200 p-2 rounded text-sm flex items-center";
-                    div.innerHTML = `<span class="h-2 w-2 bg-red-500 rounded-full mr-2"></span> ${m}`;
-                    mitList.appendChild(div);
+                    const li = document.createElement('li');
+                    li.textContent = m.action ? m.action : m;
+                    mitList.appendChild(li);
                 });
             } else {
                 mitContainer.classList.add('hidden');
             }
         }
 
-        document.getElementById('calc-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            fetchAnalysis();
-        });
+        // On Load Calibration using global Telemetry State from Home Page
+        window.addEventListener('DOMContentLoaded', () => {
+            const telemetryRaw = localStorage.getItem('telemetry_state');
+            if (telemetryRaw) {
+                try {
+                    const globalData = JSON.parse(telemetryRaw);
+                    // Extract specifically the Geotechnical part
+                    const b = globalData.risk_breakdown || {};
+                    const geoRiskPct = Math.round((b.geotechnical || 0) * 100);
 
-        // Live Simulation Loop
-        function simulateData() {
-            const loadEl = document.getElementById('actual_load');
-            const currentLoad = parseFloat(loadEl.value);
+                    if (geoRiskPct > 0) {
+                        // Reverse engineer realistic inputs to generate this risk score so chart draws correctly
+                        const cap = 150; // default bearing
+                        const load = cap * (geoRiskPct / 100); // reverse engineer load based on % risk
 
-            // Random fluctuation ±5%
-            const change = currentLoad * (Math.random() * 0.1 - 0.05);
-            let newVal = currentLoad + change;
-            if (newVal < 10) newVal = 10; // floor
+                        document.getElementById('actual_load').value = load.toFixed(1);
 
-            loadEl.value = newVal.toFixed(1);
-
-            loadEl.classList.add('bg-blue-500/30', 'border-blue-400');
-            setTimeout(() => { loadEl.classList.remove('bg-blue-500/30', 'border-blue-400'); }, 400);
-
-            // Occasionally change bearing capacity due to simulated ground conditions
-            if (Math.random() > 0.8) {
-                const bcEl = document.getElementById('bearing_capacity');
-                let bc = parseFloat(bcEl.value);
-                bc += (Math.random() * 10 - 5);
-                bcEl.value = bc.toFixed(1);
-                bcEl.classList.add('bg-yellow-500/30', 'border-yellow-400');
-                setTimeout(() => { bcEl.classList.remove('bg-yellow-500/30', 'border-yellow-400'); }, 400);
-            }
-
-            fetchAnalysis();
-        }
-
-        toggle.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                statusIndicator.classList.add('live-active');
-                statusText.textContent = "LIVE: SENSOR POLLING";
-                statusText.className = "text-[#5ee6d0] font-bold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-[#5ee6d0] shadow-[0_0_10px_#5ee6d0]";
-
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = true);
-                document.getElementById('analyze-btn').disabled = true;
-                document.getElementById('analyze-btn').classList.add('opacity-50', 'cursor-not-allowed');
-
-                simulateData();
-                liveInterval = setInterval(simulateData, 2500);
-            } else {
-                statusIndicator.classList.remove('live-active');
-                statusText.textContent = "SYSTEM IDLE";
-                statusText.className = "text-gray-400 font-semibold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-gray-500 shadow-none";
-
-                clearInterval(liveInterval);
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = false);
-                document.getElementById('analyze-btn').disabled = false;
-                document.getElementById('analyze-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+                        updateGeotechnicalUI({
+                            risk_pct: geoRiskPct,
+                            classification: geoRiskPct >= 80 ? 'Critical' : (geoRiskPct >= 40 ? 'Warning' : 'Safe'),
+                            mitigations: globalData.mitigations
+                        }, load, cap);
+                    }
+                } catch (e) {
+                    console.error("Local storage parse error: ", e);
+                }
             }
         });
     </script>

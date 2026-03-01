@@ -66,6 +66,16 @@
             box-shadow: 0 15px 25px rgba(94, 230, 208, 0.4);
         }
 
+        .btn-live {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #ffffff;
+        }
+
+        .btn-live.active {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            animation: pulse 2s infinite;
+        }
+
         label {
             color: #5ee6d0;
             margin-bottom: 0.5rem;
@@ -73,193 +83,148 @@
             font-size: 0.9rem;
         }
 
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.2);
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: #5ee6d0;
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(24px);
-        }
-
-        .live-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #ef4444;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 10px #ef4444;
-        }
-
-        .live-active .live-dot {
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
+        @keyframes pulse {
             0% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
             }
 
-            50% {
-                opacity: 0.3;
+            70% {
+                box-shadow: 0 0 0 10px rgba(249, 115, 22, 0);
             }
 
             100% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
             }
         }
     </style>
 </head>
 
-<body class="min-h-screen pb-12">
+<body class="min-h-screen">
     <div id="canvas-container"></div>
     <div class="max-w-6xl mx-auto p-8 relative z-10 pt-16">
         <div class="flex items-center justify-between mb-8">
             <h1 class="text-4xl font-semibold text-[#5ee6d0] drop-shadow-[0_0_15px_rgba(94,230,208,0.5)]">Schedule Risk
                 Engine</h1>
-            <a href="/dashboard" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
+            <a href="/" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
                 Main</a>
         </div>
 
-        <div
-            class="glass-card p-6 mb-8 flex justify-between items-center bg-black/40 border-[#5ee6d0]/30 shadow-[0_0_20px_rgba(94,230,208,0.1)]">
-            <div class="flex items-center space-x-4">
-                <div id="status-indicator" class="flex items-center text-gray-400 font-semibold tracking-wider">
-                    <span class="live-dot bg-gray-500 shadow-none"></span> <span id="status-text">SYSTEM IDLE</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Left Column -->
+            <div class="lg:col-span-4 space-y-8">
+                <div class="glass-card p-6">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                        <h2 class="text-xl font-semibold text-[#5ee6d0]">Time Tracker</h2>
+                        <button id="live-toggle"
+                            class="btn-primary btn-live text-xs py-1 px-3 rounded-full flex items-center">
+                            <span class="mr-1">⚫</span> Live Monitor
+                        </button>
+                    </div>
+
+                    <form id="calc-form" class="space-y-4">
+                        <div>
+                            <label>Planned Progress (%)</label>
+                            <input type="number" step="0.1" id="planned_progress" value="60"
+                                class="glass-input transition-colors duration-200">
+                        </div>
+                        <div>
+                            <label>Actual Progress (%)</label>
+                            <input type="number" step="0.1" id="actual_progress" value="50"
+                                class="glass-input transition-colors duration-200">
+                        </div>
+                        <div>
+                            <label>Elapsed Work Days</label>
+                            <input type="number" id="elapsed_days" value="100"
+                                class="glass-input transition-colors duration-200">
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-white/10">
+                            <label class="text-gray-400">Total Project Days (Forecast Constraint)</label>
+                            <input type="number" id="total_days" value="200" class="glass-input mt-2">
+                        </div>
+                        <button type="submit" class="w-full btn-primary mt-6">Analyze Project Velocity</button>
+                    </form>
                 </div>
-                <p class="text-sm text-gray-400 border-l border-white/20 pl-4">Simulate real-time task completion
-                    updates</p>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-sm font-medium text-white">Live Monitoring</span>
-                <label class="switch">
-                    <input type="checkbox" id="live-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="glass-card p-8 lg:col-span-1 border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Input Parameters
+                <div class="glass-card p-6 border-l-4 border-l-orange-500">
+                    <h3 class="text-lg font-semibold text-orange-400 mb-2">Engine Intelligence</h3>
+                    <p class="text-sm text-gray-300 leading-relaxed">
+                        <strong class="text-white">Ideal Benchmark:</strong> <span class="text-[#5ee6d0]">Actual
+                            Progress ≥ Planned Progress</span>. The Earned Value (EV) should match or exceed the Planned
+                        Value (PV).<br><br>
+                        If the <span class="text-orange-400">Schedule Performance Index (SPI) < 1.0</span> (Calculated
+                                as Actual/Planned), the project is officially delayed. Continued delays trigger
+                                exponential risk scaling and mandatory crashing/fast-tracking mitigations.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="lg:col-span-8 glass-card p-8 flex flex-col">
+                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Schedule Telemetry
                 </h2>
-                <form id="calc-form" class="space-y-4">
-                    <div>
-                        <label>Planned Progress (%)</label>
-                        <input type="number" step="0.1" id="planned_progress" value="60"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Actual Progress (%)</label>
-                        <input type="number" step="0.1" id="actual_progress" value="50"
-                            class="glass-input transition-all">
-                    </div>
-                    <div>
-                        <label>Elapsed Days</label>
-                        <input type="number" id="elapsed_days" value="100" class="glass-input transition-all">
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-white/10">
-                        <label class="text-gray-400">Total Project Days (forecast)</label>
-                        <input type="number" id="total_days" value="200" class="glass-input mt-2 transition-all">
-                    </div>
-                    <button type="submit" id="analyze-btn" class="w-full btn-primary mt-6">Analyze Risk</button>
-                </form>
-            </div>
 
-            <div class="glass-card p-8 lg:col-span-2 flex flex-col border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Real-Time Risk
-                    Analysis</h2>
                 <div id="results" class="hidden flex-1 flex flex-col space-y-6">
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Banner -->
                         <div class="p-6 rounded-xl text-center shadow-lg border border-white/10 flex flex-col justify-center"
                             id="risk-banner">
-                            <div class="text-sm font-medium uppercase tracking-wider mb-1 opacity-80">Delay Risk Level
+                            <div class="text-sm font-medium uppercase tracking-wider mb-1 opacity-80">Delay Target Risk
                             </div>
                             <div class="text-6xl font-bold mb-2 drop-shadow-md"><span id="risk_pct"></span>%</div>
                             <div class="text-xl font-semibold tracking-wide" id="classification"></div>
                         </div>
 
-                        <!-- Explanations & Comparisons -->
-                        <div class="bg-white/5 p-5 rounded-xl border border-white/10 flex flex-col space-y-3">
-                            <h3
-                                class="text-sm text-gray-400 uppercase tracking-widest font-semibold border-b border-white/10 pb-2">
-                                Analysis Breakdown</h3>
-
-                            <div class="text-xs space-y-2 text-gray-300">
-                                <p><span class="text-[#5ee6d0] font-semibold">Ideal State:</span> Actual Progress should
-                                    be ≥ Planned Progress to remain on critical path.</p>
-                                <p><span class="text-yellow-400 font-semibold">Previous Reading:</span> Delay risk was
-                                    <span id="old-risk-text" class="text-white font-mono">--%</span>. Schedule variance
-                                    was <span id="old-variance" class="text-white">--</span> days.</p>
-                                <p><span class="text-blue-400 font-semibold">Current State:</span> Progress is <span
-                                        id="exp-actual" class="text-white font-mono">--%</span> vs <span
-                                        id="exp-planned" class="text-white font-mono">--%</span> planned. Project is
-                                    estimated <span id="exp-days-behind" class="font-bold text-orange-400">--</span>
-                                    days behind.</p>
-                                <p class="pt-2 italic text-gray-400" id="trend-analysis"></p>
+                        <!-- Ratios & Metrics -->
+                        <div class="space-y-4 pt-4 pl-4 border-l border-white/10 flex flex-col justify-center">
+                            <h3 class="font-medium text-gray-300 mb-1 border-b border-white/5 pb-2">Velocity Metrics
+                                (SPI Target ≥ 1.0)</h3>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-400">Schedule Performance Index (SPI):</span>
+                                <span class="font-mono bg-white/10 px-3 py-1 rounded text-[#5ee6d0] transition-all"
+                                    id="delay_ratio"></span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-400">Estimated Days Behind:</span>
+                                <span
+                                    class="font-mono bg-orange-500/10 border border-orange-500/30 px-3 py-1 rounded text-orange-400 font-bold transition-all"
+                                    id="days_behind"></span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-black/30 p-4 rounded-xl border border-white/5" style="height: 250px;">
+                    <!-- Line Chart -->
+                    <div class="h-64 mt-6 w-full relative bg-black/20 rounded-xl p-4 border border-white/5">
                         <canvas id="scheduleChart"></canvas>
                     </div>
 
-                    <div id="mitigations-container" class="hidden mt-auto pt-4">
-                        <h3
-                            class="font-semibold text-[#ff7f7f] mb-3 flex items-center bg-red-900/20 p-2 rounded-lg border border-red-500/20">
-                            <svg class="w-5 h-5 mr-2 text-red-400" fill="none" stroke="currentColor"
+                    <!-- Mitigations -->
+                    <div id="mitigations-container" class="hidden mt-auto pt-6 border-t border-orange-500/30">
+                        <h3 class="font-semibold text-orange-400 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 animate-pulse" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                </path>
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            Required Schedule Mitigations
+                            Immediate Schedule Mitigations
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2" id="mitigations-list"></div>
+                        <ul id="mitigations-list" class="list-disc pl-5 space-y-2 text-orange-300 text-sm"></ul>
                     </div>
                 </div>
+
                 <div id="empty-state"
-                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-64">
-                    <p>Enter parameters or enable <span class="text-[#5ee6d0]">Live Monitoring</span></p>
+                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-96">
+                    <div class="space-y-4">
+                        <svg class="w-16 h-16 mx-auto text-gray-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        <p>Awaiting schedule telemetry...<br>Enter parameters and click <span
+                                class="text-[#5ee6d0]">Analyze</span> or toggle <span class="text-blue-400">Live
+                                Monitor</span>.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -312,25 +277,84 @@
         Chart.defaults.color = '#aaaaaa';
         Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
-        let previousRisk = null;
-        let previousDaysBehind = null;
+        let isLive = false;
         let liveInterval = null;
 
-        const maxDataPoints = 15;
-        // In Live Mode, the chart turns into a streaming timeline of Actual vs Planned
-        const liveChartData = {
-            labels: [],
-            datasets: [
-                { label: 'Planned Progress %', data: [], borderColor: '#5ee6d0', backgroundColor: 'transparent', borderDash: [5, 5], tension: 0.1 },
-                { label: 'Actual Progress %', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.1, fill: true }
-            ]
-        };
+        // Arrays to hold historical data for the chart trace
+        let historyDays = [];
+        let historyPlanned = [];
+        let historyActual = [];
 
-        async function fetchAnalysis() {
+        const liveToggleBtn = document.getElementById('live-toggle');
+        liveToggleBtn.addEventListener('click', () => {
+            isLive = !isLive;
+            if (isLive) {
+                liveToggleBtn.classList.add('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1 shadow-[0_0_5px_#fff] rounded-full">🔴</span> Live Monitor ON';
+
+                // Reset history for fresh start
+                historyDays = [];
+                historyPlanned = [];
+                historyActual = [];
+                let currentDay = parseFloat(document.getElementById('elapsed_days').value);
+                let currentPlan = parseFloat(document.getElementById('planned_progress').value);
+                let currentAct = parseFloat(document.getElementById('actual_progress').value);
+
+                // Trigger live simulation
+                liveInterval = setInterval(() => {
+                    // Simulate days passing
+                    currentDay += (Math.random() * 2 + 1);
+                    // Planned should go up linearly-ish
+                    currentPlan += (Math.random() * 2 + 0.5);
+                    // Actual might struggle
+                    currentAct += (Math.random() * 3 + 0.1);
+
+                    if (currentPlan > 100) currentPlan = 100;
+                    if (currentAct > 100) currentAct = 100;
+
+                    historyDays.push(currentDay.toFixed(0));
+                    historyPlanned.push(currentPlan.toFixed(2));
+                    historyActual.push(currentAct.toFixed(2));
+
+                    if (historyDays.length > 10) {
+                        historyDays.shift();
+                        historyPlanned.shift();
+                        historyActual.shift();
+                    }
+
+                    document.getElementById('elapsed_days').value = currentDay.toFixed(0);
+                    document.getElementById('planned_progress').value = currentPlan.toFixed(2);
+                    document.getElementById('actual_progress').value = currentAct.toFixed(2);
+
+                    const inputs = ['elapsed_days', 'planned_progress', 'actual_progress'];
+                    inputs.forEach(id => {
+                        const el = document.getElementById(id);
+                        el.style.borderColor = 'rgba(249, 115, 22, 0.5)';
+                        setTimeout(() => el.style.borderColor = 'rgba(94, 230, 208, 0.3)', 300);
+                    });
+
+                    document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+                }, 1500);
+                document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+            } else {
+                liveToggleBtn.classList.remove('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1">⚫</span> Live Monitor off';
+                clearInterval(liveInterval);
+            }
+        });
+
+        document.getElementById('calc-form').addEventListener('submit', async (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+
+            const planned = parseFloat(document.getElementById('planned_progress').value) || 0;
+            const actual = parseFloat(document.getElementById('actual_progress').value) || 0;
+            const elapsed = parseFloat(document.getElementById('elapsed_days').value) || 0;
+            const totalDays = parseFloat(document.getElementById('total_days').value) || 200;
+
             const payload = {
-                planned_progress: parseFloat(document.getElementById('planned_progress').value),
-                actual_progress: parseFloat(document.getElementById('actual_progress').value),
-                elapsed_days: parseFloat(document.getElementById('elapsed_days').value)
+                planned_progress: planned,
+                actual_progress: actual,
+                elapsed_days: elapsed
             };
 
             const response = await fetch('/schedule-dashboard', {
@@ -340,105 +364,82 @@
             });
 
             const res = await response.json();
-            updateUI(res, payload);
-        }
+            updateScheduleUI(res, planned, actual, elapsed, totalDays);
+        });
 
-        function updateUI(res, payload) {
+        function updateScheduleUI(res, planned, actual, elapsed, totalDays) {
             document.getElementById('empty-state').classList.add('hidden');
             document.getElementById('results').classList.remove('hidden');
 
-            const isLive = document.getElementById('live-toggle').checked;
-
-            if (previousRisk !== null) {
-                document.getElementById('old-risk-text').textContent = previousRisk.toFixed(1) + '%';
-                document.getElementById('old-variance').textContent = previousDaysBehind;
-
-                const trendEl = document.getElementById('trend-analysis');
-                if (res.risk_pct > previousRisk) {
-                    trendEl.innerHTML = `<span class="text-red-400">▲ Schedule slipping further. Activity delays detected.</span>`;
-                } else if (res.risk_pct < previousRisk) {
-                    trendEl.innerHTML = `<span class="text-green-400">▼ Catching up to schedule. Velocity improving.</span>`;
-                } else {
-                    trendEl.innerHTML = `Velocity stable.`;
-                }
-            } else {
-                document.getElementById('old-risk-text').textContent = 'N/A';
-                document.getElementById('old-variance').textContent = 'N/A';
-            }
-            previousRisk = res.risk_pct;
-            previousDaysBehind = res.days_behind;
-
             document.getElementById('risk_pct').textContent = res.risk_pct;
-            document.getElementById('classification').textContent = res.classification;
-            document.getElementById('exp-actual').textContent = payload.actual_progress.toFixed(1);
-            document.getElementById('exp-planned').textContent = payload.planned_progress.toFixed(1);
-            document.getElementById('exp-days-behind').textContent = res.days_behind;
+            document.getElementById('classification').textContent = res.classification || res.risk_level;
+
+            const spi = (actual / planned).toFixed(2);
+            const spiEl = document.getElementById('delay_ratio');
+            spiEl.textContent = spi;
+            if (spi >= 1.0) { spiEl.className = 'font-mono bg-white/10 px-3 py-1 rounded text-green-400 transition-all font-bold'; }
+            else if (spi >= 0.8) { spiEl.className = 'font-mono bg-white/10 px-3 py-1 rounded text-yellow-400 transition-all font-bold'; }
+            else { spiEl.className = 'font-mono bg-white/10 px-3 py-1 rounded text-red-500 transition-all font-bold'; }
+
+            document.getElementById('days_behind').textContent = res.days_behind > 0 ? res.days_behind + ' Days Behind' : 'On Track';
 
             const banner = document.getElementById('risk-banner');
             banner.className = 'p-6 rounded-xl text-center text-white transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-white/20 flex flex-col justify-center ';
-            if (res.classification === 'On Track') banner.className += 'bg-gradient-to-br from-green-500 to-green-700';
-            else if (res.classification === 'Slight Delay') banner.className += 'bg-gradient-to-br from-yellow-500 to-orange-600';
-            else banner.className += 'bg-gradient-to-br from-red-600 to-red-800';
+            if (res.classification === 'On Track' || res.risk_level === 'Stable') banner.className += 'bg-gradient-to-br from-green-500/80 to-green-700/80';
+            else if (res.classification === 'Slight Delay' || res.risk_level === 'At-Risk') banner.className += 'bg-gradient-to-br from-yellow-500/80 to-orange-600/80';
+            else banner.className += 'bg-gradient-to-br from-red-600/90 to-red-900/90 shadow-[0_0_30px_rgba(220,38,38,0.5)]';
 
-            // Chart update logic
+            // Chart forecast
             const ctx = document.getElementById('scheduleChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
 
-            if (isLive) {
-                if (chartInstance && chartInstance.config.type !== 'line') {
-                    // re-init for live view if it was standard view
-                    chartInstance.destroy();
-                    chartInstance = null;
-                }
+            let lbls = ['Start', 'Day ' + elapsed];
+            let dataPV = [0, planned];
+            let dataEV = [0, actual];
 
-                if (!chartInstance) {
-                    chartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: liveChartData,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: { max: 100, min: 0, title: { display: true, text: 'Completion %', color: '#666' } },
-                                x: { display: false }
-                            },
-                            plugins: { legend: { position: 'top' }, tooltip: { mode: 'index', intersect: false } },
-                            animation: { duration: 400 }
-                        }
-                    });
-                }
-
-                const timeLabel = new Date().toLocaleTimeString();
-                liveChartData.labels.push(timeLabel);
-                liveChartData.datasets[0].data.push(payload.planned_progress);
-                liveChartData.datasets[1].data.push(payload.actual_progress);
-
-                if (liveChartData.labels.length > maxDataPoints) {
-                    liveChartData.labels.shift();
-                    liveChartData.datasets[0].data.shift();
-                    liveChartData.datasets[1].data.shift();
-                }
-                chartInstance.update();
-
-            } else {
-                // Standard forecast chart
-                if (chartInstance) chartInstance.destroy();
-                chartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Start', 'Today', 'Target End', 'Projected End'],
-                        datasets: [
-                            { label: 'Planned %', data: [0, payload.planned_progress, 100, null], borderColor: '#5ee6d0', backgroundColor: 'rgba(94, 230, 208, 0.2)', borderDash: [5, 5], tension: 0.1, fill: true },
-                            { label: 'Actual/Projected %', data: [0, payload.actual_progress, null, 100], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.2)', tension: 0.1, fill: true }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: { y: { max: 100, min: 0 } },
-                        plugins: { legend: { position: 'top' } }
-                    }
-                });
+            if (isLive && historyDays.length > 0) {
+                lbls = ['Start'].concat(historyDays.map(d => `Day ${d}`));
+                dataPV = [0].concat(historyPlanned);
+                dataEV = [0].concat(historyActual);
             }
+
+            // Add projection
+            lbls.push('Target End (' + totalDays + ' d)');
+            dataPV.push(100);
+            dataEV.push(null); // Actual doesn't know end
+
+            let projectedEndIdx = lbls.length;
+            if (actual > 0 && elapsed > 0) {
+                let estimatedTotalDays = (elapsed / actual) * 100;
+                lbls.push('Projected End (' + Math.round(estimatedTotalDays) + ' d)');
+                dataPV.push(null);
+
+                // Fill nulls for EV until the end
+                let len = dataEV.length;
+                dataEV[len - 1] = null;
+                dataEV.push(100);
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: lbls,
+                    datasets: [
+                        { label: 'Ideal Benchmark (Planned %)', data: dataPV, borderColor: '#5ee6d0', backgroundColor: 'rgba(94, 230, 208, 0.2)', borderDash: [5, 5], tension: 0.2, fill: true, pointRadius: 4 },
+                        { label: 'Actual/Live Progress (Earned %)', data: dataEV, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.2)', tension: 0.2, fill: true, pointRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { max: 100, min: 0, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: { legend: { position: 'bottom', labels: { color: '#ccc', padding: 15 } } },
+                    animation: { duration: isLive ? 0 : 800 }
+                }
+            });
 
             const mitContainer = document.getElementById('mitigations-container');
             const mitList = document.getElementById('mitigations-list');
@@ -447,92 +448,49 @@
             if (res.mitigations && res.mitigations.length > 0) {
                 mitContainer.classList.remove('hidden');
                 res.mitigations.forEach(m => {
-                    const div = document.createElement('div');
-                    div.className = "bg-red-500/10 border border-red-500/20 text-red-200 p-2 rounded text-sm flex items-center";
-                    div.innerHTML = `<span class="h-2 w-2 bg-red-500 rounded-full mr-2"></span> ${m}`;
-                    mitList.appendChild(div);
+                    const li = document.createElement('li');
+                    li.textContent = m.action ? m.action : m;
+                    mitList.appendChild(li);
                 });
             } else {
                 mitContainer.classList.add('hidden');
             }
         }
 
-        document.getElementById('calc-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            fetchAnalysis();
-        });
+        // On Load Calibration using global Telemetry State from Home Page
+        window.addEventListener('DOMContentLoaded', () => {
+            const telemetryRaw = localStorage.getItem('telemetry_state');
+            if (telemetryRaw) {
+                try {
+                    const globalData = JSON.parse(telemetryRaw);
+                    // Extract specifically the Schedule part
+                    const b = globalData.risk_breakdown || {};
+                    const scheduleRiskPct = Math.round((b.schedule || 0) * 100);
 
-        const toggle = document.getElementById('live-toggle');
-        const statusIndicator = document.getElementById('status-indicator');
-        const statusText = document.getElementById('status-text');
+                    if (scheduleRiskPct > 0) {
+                        // Reverse engineer realistic inputs to generate this schedule risk score
+                        const totalDays = 200;
+                        const elapsed = 100;
+                        const planned = 50; // halfway done
+                        // If risk is 0, actual = 50. If risk is 100%, actual = 0.
+                        let actual = planned - (planned * (scheduleRiskPct / 100));
+                        if (actual < 0) actual = 0;
 
-        function simulateData() {
-            const actualEl = document.getElementById('actual_progress');
-            const plannedEl = document.getElementById('planned_progress');
-            const elapsedEl = document.getElementById('elapsed_days');
+                        document.getElementById('planned_progress').value = planned.toFixed(1);
+                        document.getElementById('actual_progress').value = actual.toFixed(1);
 
-            let actual = parseFloat(actualEl.value);
-            let planned = parseFloat(plannedEl.value);
-            let elapsed = parseInt(elapsedEl.value);
+                        const daysBehind = Math.round(((planned - actual) / planned) * elapsed);
 
-            // Simulation logic
-            elapsed += 1;
-            planned += (100 - planned) * 0.01; // creeping up slowly
-            actual += (Math.random() * 0.5 - 0.1); // Actual advances slightly slower realistically
-
-            if (actual > 100) actual = 100;
-            if (planned > 100) planned = 100;
-            if (actual < 0) actual = 0;
-
-            elapsedEl.value = elapsed;
-            plannedEl.value = planned.toFixed(1);
-            actualEl.value = actual.toFixed(1);
-
-            actualEl.classList.add('bg-blue-500/30', 'border-blue-400');
-            setTimeout(() => { actualEl.classList.remove('bg-blue-500/30', 'border-blue-400'); }, 400);
-
-            fetchAnalysis();
-        }
-
-        toggle.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                statusIndicator.classList.add('live-active');
-                statusText.textContent = "LIVE: SCHEDULER SYNC";
-                statusText.className = "text-[#5ee6d0] font-bold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-[#5ee6d0] shadow-[0_0_10px_#5ee6d0]";
-
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = true);
-                document.getElementById('analyze-btn').disabled = true;
-                document.getElementById('analyze-btn').classList.add('opacity-50', 'cursor-not-allowed');
-
-                // Clear old chart data to reset view
-                liveChartData.labels = [];
-                liveChartData.datasets[0].data = [];
-                liveChartData.datasets[1].data = [];
-                if (chartInstance) {
-                    chartInstance.destroy();
-                    chartInstance = null;
+                        updateScheduleUI({
+                            risk_pct: scheduleRiskPct,
+                            classification: scheduleRiskPct >= 80 ? 'Critical' : (scheduleRiskPct >= 40 ? 'Slight Delay' : 'On Track'),
+                            mitigations: globalData.mitigations,
+                            days_behind: daysBehind > 0 ? daysBehind : 0
+                        }, planned, actual, elapsed, totalDays);
+                    }
+                } catch (e) {
+                    console.error("Local storage parse error: ", e);
                 }
-
-                simulateData();
-                liveInterval = setInterval(simulateData, 2000);
-            } else {
-                statusIndicator.classList.remove('live-active');
-                statusText.textContent = "SYSTEM IDLE";
-                statusText.className = "text-gray-400 font-semibold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-gray-500 shadow-none";
-
-                clearInterval(liveInterval);
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = false);
-                document.getElementById('analyze-btn').disabled = false;
-                document.getElementById('analyze-btn').classList.remove('opacity-50', 'cursor-not-allowed');
-
-                // Revert to static chart
-                if (chartInstance) {
-                    chartInstance.destroy();
-                    chartInstance = null;
-                }
-                fetchAnalysis(); // force redraw of static chart
             }
         });
     </script>

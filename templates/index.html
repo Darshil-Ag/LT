@@ -998,68 +998,7 @@
             </div>
         </div>
 
-        <!-- <div class="side-panel left-panel">
-        <div class="panel-content">
-            <h2>Features</h2>
-            <ul>
-                <li>Convert floor plans to DXF</li>
-                <li>Automatic wall detection</li>
-                <li>Multiple file formats supported</li>
-                <li>Quick processing time</li>
-                <li>High precision output</li>
-                <li>AI-based plan generation</li>
-            </ul>
-        </div>
-        <div class="panel-tab">
-            <span>Features</span>
-        </div>
-    </div>
-    
-    <div class="side-panel right-panel">
-        <div class="panel-content">
-            <h2>Working</h2>
-            <ol>
-                <li>Upload your floor plan image or specify room requirements</li>
-                <li>Our AI processes the design</li>
-                <li>Get your CAD file within seconds</li>
-                <li>Edit in your favorite CAD software</li>
-            </ol>
-        </div> -->
-
-        <div class="side-panel left-panel">
-            <div class="panel-content">
-                <h2>Features</h2>
-                <ul>
-                    <li>Convert floor plans to DXF</li>
-                    <!-- <li></li> -->
-                    <li>Multiple file formats supported</li>
-                    <li>Quick processing time</li>
-                    <li>High precision output</li>
-                    <li>Easy and Intuitive to use</li>
-                </ul>
-            </div>
-            <div class="panel-tab">
-                <span>Features</span>
-            </div>
-        </div>
-
-        <div class="side-panel right-panel">
-            <div class="panel-content">
-                <h2>Working</h2>
-                <ul>
-                    <!-- <li>Upload your floor plan image or specify room requirements</li> -->
-                    <!-- <li></li> -->
-                    <li>Upload your image file</li>
-                    <li>Or let us create a floor plan for you</li>
-                    <li>Get your CAD file within seconds</li>
-                    <li>Edit in your favorite CAD software</li>
-                </ul>
-            </div>
-
-            <div class="panel-tab">
-                <span>Working</span>
-            </div>
-        </div>
+        <!-- Leftover Side Panels Removed -->
 
 
 
@@ -1458,7 +1397,7 @@
             });
 
             // Simulate live construction data and call /analyze_construction
-            document.getElementById('simulate-btn').addEventListener('click', async () => {
+            const runSimulation = async (isLive = false) => {
                 const soilType = document.getElementById('soil-type').value;
                 const seismicZone = document.getElementById('seismic-zone').value;
                 const floors = parseInt(document.getElementById('floors').value || '1', 10);
@@ -1479,13 +1418,13 @@
                     concrete_strength: 20 + Math.random() * 10       // MPa
                 };
 
-                const isLive = document.getElementById('live-monitor-toggle').checked;
+                // Only show loading if intel-results is not already displayed and it's not a live interval update
+                const resultsEl = document.getElementById('intel-results');
+                const isResultsVisible = resultsEl.style.display === 'block' || resultsEl.style.display === 'flex';
 
-                if (!isLive || document.getElementById('intel-results').style.display === 'none' || document.getElementById('intel-results').style.display === '') {
+                if (!isResultsVisible && !isLive) {
                     document.getElementById('intel-loading').style.display = 'block';
-                    if (!isLive) {
-                        document.getElementById('intel-results').style.display = 'none';
-                    }
+                    resultsEl.style.display = 'none';
                 }
 
                 try {
@@ -1507,7 +1446,14 @@
 
                     if (!response.ok || !data || data.error) {
                         showAlert(data.error || 'Failed to analyze construction risk', 'error');
+                        document.getElementById('intel-loading').style.display = 'none';
                         return;
+                    }
+
+                    // Hide loading and ensure results are visible
+                    if (!isLive || !isResultsVisible) {
+                        document.getElementById('intel-loading').style.display = 'none';
+                        resultsEl.style.display = 'block';
                     }
 
                     const riskScore = data.risk_score ?? 0;
@@ -1611,6 +1557,9 @@
                     } else {
                         document.getElementById('scenario-target-risk').style.color = '#888';
                     }
+
+                    // SAVE TO LOCAL STORAGE FOR OTHER DASHBOARDS TO USE
+                    localStorage.setItem('telemetry_state', JSON.stringify(data));
 
                     // Phase 5: Trend Projection Bar Chart
                     const projectionContainer = document.getElementById('trend-projection-container');
@@ -1751,19 +1700,21 @@
                         }
                     }
 
-                    document.getElementById('intel-results').style.display = 'flex';
-                    if (!isLive) {
-                        showAlert('Construction risk analyzed successfully.', 'success');
+                    // Prevent resetting from block to flex which might cause a jank
+                    if (!isResultsVisible) {
+                        resultsEl.style.display = 'block';
+                        if (!isLive) showAlert('Construction risk analyzed successfully.', 'success');
                     }
+
                 } catch (error) {
                     console.error('Error:', error);
-                    if (!isLive) {
-                        showAlert('An error occurred while analyzing construction risk', 'error');
-                    }
+                    showAlert('An error occurred while analyzing construction risk', 'error');
                 } finally {
-                    document.getElementById('intel-loading').style.display = 'none';
+                    if (!isLive) document.getElementById('intel-loading').style.display = 'none';
                 }
-            });
+            };
+
+            document.getElementById('simulate-btn').addEventListener('click', () => runSimulation(false));
 
             // Add hover animations for buttons
             const buttons = document.querySelectorAll('.btn');
@@ -1841,9 +1792,9 @@
                         document.getElementById('manual-settlement').value = "";
 
                         liveMonitorInterval = setInterval(() => {
-                            document.getElementById('simulate-btn').click();
+                            runSimulation(true);
                         }, 5000); // 5 sec update
-                        document.getElementById('simulate-btn').click(); // trigger immediately
+                        runSimulation(true); // trigger immediately
                     } else {
                         slider.style.backgroundColor = 'rgba(255,255,255,0.2)';
                         knob.style.transform = 'translateX(0px)';

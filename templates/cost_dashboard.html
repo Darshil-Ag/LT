@@ -66,6 +66,16 @@
             box-shadow: 0 15px 25px rgba(94, 230, 208, 0.4);
         }
 
+        .btn-live {
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+            color: #ffffff;
+        }
+
+        .btn-live.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: pulse 2s infinite;
+        }
+
         label {
             color: #5ee6d0;
             margin-bottom: 0.5rem;
@@ -73,201 +83,181 @@
             font-size: 0.9rem;
         }
 
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(255, 255, 255, 0.2);
-            transition: .4s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: #ef4444;
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(24px);
-        }
-
-        .live-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #ef4444;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            box-shadow: 0 0 10px #ef4444;
-        }
-
-        .live-active .live-dot {
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
+        @keyframes pulse {
             0% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
             }
 
-            50% {
-                opacity: 0.3;
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
             }
 
             100% {
-                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
             }
         }
     </style>
 </head>
 
-<body class="min-h-screen pb-12">
+<body class="min-h-screen">
     <div id="canvas-container"></div>
     <div class="max-w-6xl mx-auto p-8 relative z-10 pt-16">
         <div class="flex items-center justify-between mb-8">
-            <h1 class="text-4xl font-semibold text-[#5ee6d0] drop-shadow-[0_0_15px_rgba(94,230,208,0.5)]">Cost Risk
-                Engine</h1>
-            <a href="/dashboard" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
+            <h1 class="text-4xl font-semibold text-[#5ee6d0] drop-shadow-[0_0_15px_rgba(94,230,208,0.5)]">Cost Impact
+                Risk Engine</h1>
+            <a href="/" class="text-gray-400 hover:text-[#5ee6d0] font-medium transition-colors">← Back to
                 Main</a>
         </div>
 
-        <div
-            class="glass-card p-6 mb-8 flex justify-between items-center bg-black/40 border-[#ef4444]/30 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
-            <div class="flex items-center space-x-4">
-                <div id="status-indicator" class="flex items-center text-gray-400 font-semibold tracking-wider">
-                    <span class="live-dot bg-gray-500 shadow-none"></span> <span id="status-text">SYSTEM IDLE</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Left Column: Inputs & Explanations -->
+            <div class="lg:col-span-4 space-y-8">
+                <div class="glass-card p-6">
+                    <div class="flex justify-between items-center border-b border-white/10 pb-4 mb-6">
+                        <h2 class="text-xl font-semibold text-[#5ee6d0]">Financial Impact Factors</h2>
+                        <button id="live-toggle"
+                            class="btn-primary btn-live text-xs py-1 px-3 rounded-full flex items-center">
+                            <span class="mr-1">⚫</span> Live Audit
+                        </button>
+                    </div>
+
+                    <form id="calc-form" class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4 border-b border-white/10 pb-4">
+                            <div>
+                                <label>Base Budget ($)</label>
+                                <input type="number" id="base_budget" value="1000000" class="glass-input">
+                            </div>
+                            <div class="flex items-end text-sm text-gray-400 pb-2">
+                                Ideal baseline project cost
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label>Extra Steel (Tons)</label>
+                                <input type="number" step="0.1" id="extra_steel" value="10"
+                                    class="glass-input transition-colors duration-200">
+                            </div>
+                            <div>
+                                <label>Steel Rate ($/Ton)</label>
+                                <input type="number" step="0.1" id="steel_rate" value="800"
+                                    class="glass-input font-bold text-yellow-400">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label>Extra Concrete (m³)</label>
+                                <input type="number" step="0.1" id="extra_concrete" value="50"
+                                    class="glass-input transition-colors duration-200">
+                            </div>
+                            <div>
+                                <label>Concrete Rate ($/m³)</label>
+                                <input type="number" step="0.1" id="concrete_rate" value="150"
+                                    class="glass-input font-bold text-yellow-400">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mt-4 bg-red-500/10 p-4 rounded-xl border border-red-500/20">
+                            <div>
+                                <label class="text-red-400">Delay (Days)</label>
+                                <input type="number" id="delay_days" value="5"
+                                    class="glass-input text-red-300 transition-colors duration-200 border-red-500/50">
+                            </div>
+                            <div>
+                                <label class="text-red-400">Daily Ops Cost ($)</label>
+                                <input type="number" step="0.1" id="daily_cost" value="2000"
+                                    class="glass-input text-red-300 border-red-500/50">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full btn-primary mt-6">Audit Cost Escalation</button>
+                    </form>
                 </div>
-                <p class="text-sm text-gray-400 border-l border-white/20 pl-4">Simulate continuous financial and
-                    material usage tracking</p>
-            </div>
-            <div class="flex items-center space-x-3">
-                <span class="text-sm font-medium text-white">Live Monitoring</span>
-                <label class="switch">
-                    <input type="checkbox" id="live-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="glass-card p-8 lg:col-span-1 border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Input Parameters
-                </h2>
-                <form id="calc-form" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label>Extra Steel (Tons)</label>
-                            <input type="number" step="0.1" id="extra_steel" value="10"
-                                class="glass-input transition-all">
-                        </div>
-                        <div>
-                            <label>Steel Rate ($/Ton)</label>
-                            <input type="number" step="0.1" id="steel_rate" value="800"
-                                class="glass-input transition-all">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label>Extra Concrete (m³)</label>
-                            <input type="number" step="0.1" id="extra_concrete" value="50"
-                                class="glass-input transition-all">
-                        </div>
-                        <div>
-                            <label>Concrete Rate ($/m³)</label>
-                            <input type="number" step="0.1" id="concrete_rate" value="150"
-                                class="glass-input transition-all">
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4 mt-4">
-                        <div>
-                            <label>Delay (Days)</label>
-                            <input type="number" id="delay_days" value="5" class="glass-input transition-all">
-                        </div>
-                        <div>
-                            <label>Daily Ops Cost ($)</label>
-                            <input type="number" step="0.1" id="daily_cost" value="2000"
-                                class="glass-input transition-all">
-                        </div>
-                    </div>
-                    <button type="submit" id="analyze-btn"
-                        class="w-full btn-primary mt-6 !from-red-500 !to-red-700 !shadow-[0_10px_20px_rgba(239,68,68,0.3)] hover:!shadow-[0_15px_25px_rgba(239,68,68,0.4)] text-white">Analyze
-                        Cost Impact</button>
-                </form>
+                <div class="glass-card p-6 border-l-4 border-l-[#5ee6d0]">
+                    <h3 class="text-lg font-semibold text-[#5ee6d0] mb-2">Financial Intelligence</h3>
+                    <p class="text-sm text-gray-300 leading-relaxed">
+                        <strong class="text-white">Ideal Benchmark:</strong> <span class="text-[#5ee6d0]">0
+                            Excess</span> Material and <span class="text-[#5ee6d0]">0 Delay Overhead</span>.<br><br>
+                        Mitigation designs (like stronger foundations) frequently raise material costs. Delays severely
+                        inflate General Conditions & Operations tracking. <br>
+                        Keeping <span class="text-orange-400">Escalation below 5-10%</span> of the base budget is
+                        critical contingency management.
+                    </p>
+                </div>
             </div>
 
-            <div class="glass-card p-8 lg:col-span-2 flex flex-col border-white/5">
-                <h2 class="text-2xl font-semibold mb-6 text-[#ef4444] border-b border-white/10 pb-4">Real-Time Cost
-                    Escalation Analysis</h2>
+            <!-- Right Column: Results & Graphs -->
+            <div class="lg:col-span-8 glass-card p-8 flex flex-col">
+                <h2 class="text-2xl font-semibold mb-6 text-[#5ee6d0] border-b border-white/10 pb-4">Escalation
+                    Telemetry</h2>
+
                 <div id="results" class="hidden flex-1 flex flex-col space-y-6">
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="p-6 rounded-xl text-center shadow-lg border border-red-500/30 bg-gradient-to-br from-red-600/50 to-red-800/10 flex flex-col justify-center"
+                        <!-- Risk Banner -->
+                        <div class="p-6 rounded-xl text-center shadow-[0_0_30px_rgba(239,68,68,0.2)] border border-red-500/30 bg-gradient-to-br from-red-600/50 to-red-800/10 flex flex-col justify-center"
                             id="risk-banner">
                             <div class="text-sm font-medium uppercase tracking-wider mb-1 text-red-200">Total Extra Cost
                             </div>
                             <div class="text-6xl font-bold mb-2 text-red-400 drop-shadow-md">$<span
                                     id="total_cost"></span></div>
+                            <div class="text-lg font-mono text-orange-300 mt-2">+<span id="pct_increase">0.0</span>%
+                                Over Baseline</div>
                         </div>
 
-                        <!-- Explanations & Comparisons -->
-                        <div class="bg-white/5 p-5 rounded-xl border border-white/10 flex flex-col space-y-3">
-                            <h3
-                                class="text-sm text-gray-400 uppercase tracking-widest font-semibold border-b border-white/10 pb-2">
-                                Analysis Breakdown</h3>
-
-                            <div class="text-xs space-y-2 text-gray-300">
-                                <p><span class="text-[#5ee6d0] font-semibold">Ideal State:</span> $0 extra usage. 0 days
-                                    delay. Zero overheads.</p>
-                                <p><span class="text-yellow-400 font-semibold">Previous Batch:</span> Total cost impact
-                                    was <span id="old-cost-text" class="text-white font-mono">$0</span>.</p>
-                                <p><span class="text-blue-400 font-semibold">Current Batch:</span> Material escalation
-                                    is <span id="exp-material" class="text-white font-mono">$0</span>. Delay overhead is
-                                    <span id="exp-delay" class="text-white font-mono">$0</span>.</p>
-                                <p class="pt-2 italic text-gray-400" id="trend-analysis"></p>
+                        <!-- Metrics Breakdown -->
+                        <div class="space-y-4 pt-4 pl-4 border-l border-white/10 flex flex-col justify-center">
+                            <h3 class="font-medium text-gray-300 mb-1 border-b border-white/5 pb-2">Financial Burn Rate
+                            </h3>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-400 text-xs uppercase tracking-wider">Material Escalation</span>
+                                <span
+                                    class="font-mono bg-white/10 px-3 py-1 rounded text-orange-400 transition-all font-bold">+$<span
+                                        id="material_cost"></span></span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-400 text-xs uppercase tracking-wider">Overhead/Delay Drag</span>
+                                <span
+                                    class="font-mono bg-white/10 px-3 py-1 rounded text-red-400 transition-all font-bold">+$<span
+                                        id="delay_cost"></span></span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <div class="bg-black/30 p-4 rounded-xl border border-white/5 flex items-center justify-center"
-                            style="height: 250px;">
-                            <canvas id="costDoughnut"></canvas>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <!-- Doughnut Chart: Distribution -->
+                        <div
+                            class="h-64 relative bg-black/20 rounded-xl p-4 border border-white/5 flex flex-col items-center justify-center">
+                            <h4 class="text-xs text-center text-gray-400 mb-2 uppercase tracking-wide">Escalation
+                                Breakdown</h4>
+                            <div class="w-full h-48 relative">
+                                <canvas id="costChart"></canvas>
+                            </div>
                         </div>
-                        <div class="bg-black/30 p-4 rounded-xl border border-white/5" style="height: 250px;">
-                            <canvas id="liveCostChart"></canvas>
+
+                        <!-- Bar Chart: Expected vs Actual -->
+                        <div
+                            class="h-64 relative bg-black/20 rounded-xl p-4 border border-white/5 flex flex-col items-center justify-center">
+                            <h4 class="text-xs text-center text-gray-400 mb-2 uppercase tracking-wide">Budget Comparison
+                            </h4>
+                            <div class="w-full h-48 relative">
+                                <canvas id="budgetChart"></canvas>
+                            </div>
                         </div>
                     </div>
+
                 </div>
+
                 <div id="empty-state"
-                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-64">
-                    <p>Enter parameters or enable <span class="text-[#ef4444]">Live Monitoring</span></p>
+                    class="flex-1 flex items-center justify-center text-gray-500 text-center font-medium h-96">
+                    <div class="space-y-4">
+                        <svg class="w-16 h-16 mx-auto text-gray-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
+                        <p>Awaiting financial audit...<br>Enter parameters and click <span class="text-[#5ee6d0]">Audit
+                                Cost</span> or run a <span class="text-yellow-400">Live Audit</span>.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -282,19 +272,23 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
-        const gridHelper = new THREE.GridHelper(100, 50, 0xef4444, 0xb91c1c);
+
+        const gridHelper = new THREE.GridHelper(100, 50, 0x5ee6d0, 0x36a18b);
         scene.add(gridHelper);
+
         const particles = new THREE.Group();
         scene.add(particles);
         for (let i = 0; i < 100; i++) {
             const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-            const material = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: Math.random() * 0.5 + 0.1 });
+            const material = new THREE.MeshBasicMaterial({ color: 0x5ee6d0, transparent: true, opacity: Math.random() * 0.5 + 0.1 });
             const particle = new THREE.Mesh(geometry, material);
             particle.position.set(Math.random() * 40 - 20, Math.random() * 40 - 20, Math.random() * 40 - 20);
             particle.userData = { vx: Math.random() * 0.02 - 0.01, vy: Math.random() * 0.02 - 0.01, vz: Math.random() * 0.02 - 0.01 };
             particles.add(particle);
         }
+
         camera.position.z = 30; camera.position.y = 15; camera.lookAt(0, 0, 0);
+
         function animate() {
             requestAnimationFrame(animate);
             gridHelper.rotation.y += 0.001;
@@ -311,101 +305,102 @@
         window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         animate();
 
-        // Dashboard Logic & Live Tracking
+        // Dashboard Logic
+        let doughChartInstance = null;
+        let barChartInstance = null;
         Chart.defaults.color = '#aaaaaa';
         Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
-        let doughnutChart = null;
-        let lineChart = null;
-        const maxDataPoints = 15;
-        const lineChartData = {
-            labels: [],
-            datasets: [
-                { label: 'Total Extra Cost ($)', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', tension: 0.4, fill: true, borderWidth: 2 }
-            ]
-        };
-
-        function initLineChart() {
-            const ctx = document.getElementById('liveCostChart').getContext('2d');
-            lineChart = new Chart(ctx, {
-                type: 'line',
-                data: lineChartData,
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'USD ($)', color: '#666' } },
-                        x: { display: false }
-                    },
-                    plugins: {
-                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    animation: { duration: 400 }
-                }
-            });
-        }
-
-        let previousCost = null;
+        let isLive = false;
         let liveInterval = null;
-        const toggle = document.getElementById('live-toggle');
-        const statusIndicator = document.getElementById('status-indicator');
-        const statusText = document.getElementById('status-text');
 
-        async function fetchAnalysis() {
-            const payload = {
-                extra_steel: parseFloat(document.getElementById('extra_steel').value),
-                steel_rate: parseFloat(document.getElementById('steel_rate').value),
-                extra_concrete: parseFloat(document.getElementById('extra_concrete').value),
-                concrete_rate: parseFloat(document.getElementById('concrete_rate').value),
-                delay_days: parseFloat(document.getElementById('delay_days').value),
-                daily_cost: parseFloat(document.getElementById('daily_cost').value)
+        const liveToggleBtn = document.getElementById('live-toggle');
+        liveToggleBtn.addEventListener('click', () => {
+            isLive = !isLive;
+            if (isLive) {
+                liveToggleBtn.classList.add('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1 shadow-[0_0_5px_#fff] rounded-full">🔴</span> Live Audit ON';
+
+                // Trigger live simulation every 2s
+                liveInterval = setInterval(() => {
+                    // Random pricing/delay fluctuations representing continuous market/site variables
+                    const exS = parseFloat(document.getElementById('extra_steel').value) || 10;
+                    const exC = parseFloat(document.getElementById('extra_concrete').value) || 50;
+                    const days = parseFloat(document.getElementById('delay_days').value) || 5;
+
+                    document.getElementById('extra_steel').value = (exS + (Math.random() * 4 - 2)).toFixed(1);
+                    document.getElementById('extra_concrete').value = (exC + (Math.random() * 10 - 5)).toFixed(1);
+                    document.getElementById('delay_days').value = (days + (Math.random() * 2 - 0.8)).toFixed(1);
+
+                    const inputs = ['extra_steel', 'extra_concrete', 'delay_days'];
+                    inputs.forEach(id => {
+                        const el = document.getElementById(id);
+                        el.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                        setTimeout(() => {
+                            if (el.classList.contains('border-red-500/50')) el.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                            else el.style.borderColor = 'rgba(94, 230, 208, 0.3)';
+                        }, 300);
+                    });
+
+                    document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+                }, 2000);
+                document.getElementById('calc-form').dispatchEvent(new Event('submit'));
+            } else {
+                liveToggleBtn.classList.remove('active');
+                liveToggleBtn.innerHTML = '<span class="mr-1">⚫</span> Live Audit';
+                clearInterval(liveInterval);
+            }
+        });
+
+        document.getElementById('calc-form').addEventListener('submit', async (e) => {
+            if (e && e.preventDefault) e.preventDefault();
+
+            const baseBudget = parseFloat(document.getElementById('base_budget').value) || 1000000;
+
+            const data = {
+                extra_steel: parseFloat(document.getElementById('extra_steel').value) || 0,
+                steel_rate: parseFloat(document.getElementById('steel_rate').value) || 0,
+                extra_concrete: parseFloat(document.getElementById('extra_concrete').value) || 0,
+                concrete_rate: parseFloat(document.getElementById('concrete_rate').value) || 0,
+                delay_days: parseFloat(document.getElementById('delay_days').value) || 0,
+                daily_cost: parseFloat(document.getElementById('daily_cost').value) || 0
             };
 
             const response = await fetch('/cost-dashboard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(data)
             });
 
             const res = await response.json();
-            updateUI(res, payload);
-        }
+            updateCostUI(res, baseBudget);
+        });
 
-        function updateUI(res, payload) {
+        function updateCostUI(res, baseBudget) {
             document.getElementById('empty-state').classList.add('hidden');
             document.getElementById('results').classList.remove('hidden');
 
-            if (!lineChart) initLineChart();
+            document.getElementById('total_cost').textContent = res.total_extra_cost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('material_cost').textContent = res.material_cost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+            document.getElementById('delay_cost').textContent = res.delay_cost.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
-            // Store old safely
-            if (previousCost !== null) {
-                document.getElementById('old-cost-text').textContent = '$' + previousCost.toLocaleString();
+            // Calculate % increase over baseline
+            const pctInc = ((res.total_extra_cost / baseBudget) * 100).toFixed(2);
+            const pctEl = document.getElementById('pct_increase');
+            pctEl.textContent = pctInc;
+            if (pctInc > 10) pctEl.className = "text-red-400 font-bold";
+            else if (pctInc > 5) pctEl.className = "text-orange-400 font-bold";
+            else pctEl.className = "text-yellow-400 font-bold";
 
-                const trendEl = document.getElementById('trend-analysis');
-                if (res.total_extra_cost > previousCost) {
-                    trendEl.innerHTML = `<span class="text-red-400">▲ Costs escalating. Budget variance expanding.</span>`;
-                } else if (res.total_extra_cost < previousCost) {
-                    trendEl.innerHTML = `<span class="text-green-400">▼ Costs reducing. Recovering budget variance.</span>`;
-                } else {
-                    trendEl.innerHTML = `Expenditure run-rate stable.`;
-                }
-            }
-            previousCost = res.total_extra_cost;
-
-            document.getElementById('total_cost').textContent = res.total_extra_cost.toLocaleString();
-            document.getElementById('exp-material').textContent = '$' + res.material_cost.toLocaleString();
-            document.getElementById('exp-delay').textContent = '$' + res.delay_cost.toLocaleString();
-
-            // Doughnut Chart
-            const ctxDoughnut = document.getElementById('costDoughnut').getContext('2d');
-            if (doughnutChart) doughnutChart.destroy();
-            doughnutChart = new Chart(ctxDoughnut, {
+            // Doughnut Chart Setup
+            const ctxD = document.getElementById('costChart').getContext('2d');
+            if (doughChartInstance) doughChartInstance.destroy();
+            doughChartInstance = new Chart(ctxD, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Material Escalation', 'Delay Overheads'],
+                    labels: ['Material Overhead', 'Delay Drag'],
                     datasets: [{
-                        data: [res.material_cost, res.delay_cost],
+                        data: [Math.max(res.material_cost, 0), Math.max(res.delay_cost, 0)],
                         backgroundColor: ['#f97316', '#ef4444'], // Orange and Red
                         borderWidth: 0,
                         hoverOffset: 4
@@ -416,82 +411,98 @@
                     maintainAspectRatio: false,
                     cutout: '70%',
                     plugins: {
-                        legend: { position: 'bottom', labels: { color: '#ddd' } }
+                        legend: { position: 'bottom', labels: { color: '#ccc', font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ' $' + context.raw.toLocaleString();
+                                }
+                            }
+                        }
                     },
-                    animation: { animateRotate: true, animateScale: false, duration: 400 }
+                    animation: { duration: isLive ? 300 : 800 }
                 }
             });
 
-            // Update Line Chart tracking
-            const timeLabel = new Date().toLocaleTimeString();
-            lineChartData.labels.push(timeLabel);
-            lineChartData.datasets[0].data.push(res.total_extra_cost);
-
-            if (lineChartData.labels.length > maxDataPoints) {
-                lineChartData.labels.shift();
-                lineChartData.datasets[0].data.shift();
-            }
-            lineChart.update();
-        }
-
-        document.getElementById('calc-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            fetchAnalysis();
-        });
-
-        function simulateData() {
-            const steelEl = document.getElementById('extra_steel');
-            const concreteEl = document.getElementById('extra_concrete');
-            const delayEl = document.getElementById('delay_days');
-
-            let steel = parseFloat(steelEl.value);
-            let concrete = parseFloat(concreteEl.value);
-            let delays = parseFloat(delayEl.value);
-
-            // Random fluctuation ±5% for materials, gradually increasing
-            steel += (steel * (Math.random() * 0.1 - 0.03));
-            concrete += (concrete * (Math.random() * 0.1 - 0.03));
-            delays += (Math.random() * 0.4 - 0.1);
-
-            if (steel < 0) steel = 0;
-            if (concrete < 0) concrete = 0;
-            if (delays < 0) delays = 0;
-
-            steelEl.value = steel.toFixed(1);
-            concreteEl.value = concrete.toFixed(1);
-            delayEl.value = delays.toFixed(1);
-
-            [steelEl, concreteEl, delayEl].forEach(el => {
-                el.classList.add('bg-red-500/30', 'border-red-400');
-                setTimeout(() => el.classList.remove('bg-red-500/30', 'border-red-400'), 400);
+            // Bar Chart Setup
+            const ctxB = document.getElementById('budgetChart').getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+            barChartInstance = new Chart(ctxB, {
+                type: 'bar',
+                data: {
+                    labels: ['Budget Variance vs Ideal'],
+                    datasets: [{
+                        label: 'Ideal Baseline Cost',
+                        data: [baseBudget],
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    }, {
+                        label: 'Current Expected Total (Escalated)',
+                        data: [baseBudget + res.total_extra_cost],
+                        backgroundColor: (res.total_extra_cost / baseBudget) > 0.1 ? 'rgba(239, 68, 68, 0.8)' : 'rgba(234, 179, 8, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { display: false }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#ccc', font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ' $' + context.raw.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    animation: { duration: isLive ? 300 : 800 }
+                }
             });
-
-            fetchAnalysis();
         }
 
-        toggle.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                statusIndicator.classList.add('live-active');
-                statusText.textContent = "LIVE: FINANCIAL TRACKING";
-                statusText.className = "text-[#ef4444] font-bold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-[#ef4444] shadow-[0_0_10px_#ef4444]";
+        // On Load Calibration using global Telemetry State from Home Page
+        window.addEventListener('DOMContentLoaded', () => {
+            const telemetryRaw = localStorage.getItem('telemetry_state');
+            if (telemetryRaw) {
+                try {
+                    const globalData = JSON.parse(telemetryRaw);
 
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = true);
-                document.getElementById('analyze-btn').disabled = true;
-                document.getElementById('analyze-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                    // The cost string is like "+12.1%" or something similar from app.py
+                    const costImpactStr = globalData.cost_impact || "+0.0%";
+                    const totalCostExtra = parseFloat(costImpactStr.replace(/[+$,%]/g, '')) || 0;
 
-                simulateData();
-                liveInterval = setInterval(simulateData, 2500);
-            } else {
-                statusIndicator.classList.remove('live-active');
-                statusText.textContent = "SYSTEM IDLE";
-                statusText.className = "text-gray-400 font-semibold";
-                document.getElementById('status-indicator').querySelector('.live-dot').className = "live-dot bg-gray-500 shadow-none";
+                    if (totalCostExtra > 0) {
+                        const baseBudget = parseFloat(document.getElementById('base_budget').value) || 1000000;
 
-                clearInterval(liveInterval);
-                document.querySelectorAll('.glass-input').forEach(el => el.disabled = false);
-                document.getElementById('analyze-btn').disabled = false;
-                document.getElementById('analyze-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+                        // Fake a distribution: 40% material, 60% delay
+                        const materialCost = totalCostExtra * 0.4;
+                        const delayCost = totalCostExtra * 0.6;
+
+                        // Reverse engineer inputs
+                        const dailyCost = 2000;
+                        const delayDays = delayCost / dailyCost;
+
+                        const steelRate = 2500;
+                        const concRate = 150;
+                        const extraSteel = (materialCost * 0.7) / steelRate;
+                        const extraConc = (materialCost * 0.3) / concRate;
+
+                        document.getElementById('extra_steel').value = extraSteel.toFixed(1);
+                        document.getElementById('extra_concrete').value = extraConc.toFixed(1);
+                        document.getElementById('delay_days').value = delayDays.toFixed(1);
+
+                        updateCostUI({
+                            total_extra_cost: totalCostExtra,
+                            material_cost: materialCost,
+                            delay_cost: delayCost
+                        }, baseBudget);
+                    }
+                } catch (e) {
+                    console.error("Local storage parse error: ", e);
+                }
             }
         });
     </script>
